@@ -150,12 +150,12 @@ public class Transaction implements ByteSerializable {
                 byte[] checkHash = new byte[20];
                 System.arraycopy(scriptBytes, 2, checkHash, 0, 20);
                 byte[] redeemScript = new byte[1 + 1 + 20];
-                redeemScript[0] = 0;
+                redeemScript[0] = (byte)ScriptOpCodes.OP_0;
                 redeemScript[1] = 20;
                 System.arraycopy(input.getKey().getPubKeyHash(), 0, redeemScript, 2, 20);
                 byte[] hash = Utils.sha256Hash160(redeemScript);
                 if (!Arrays.equals(hash, checkHash)) {
-                    throw new VerificationException("Unsupported P2SH output");
+                    throw new VerificationException("Unsupported P2SH connected output");
                 }
                 segWit = true;
             }
@@ -278,7 +278,8 @@ public class Transaction implements ByteSerializable {
         // Create the transaction inputs
         //
         for (int i=0; i<inputCount; i++) {
-            txInputs.add(new TransactionInput(this, i, inputs.get(i).getOutPoint()));
+            SignedInput input = inputs.get(i);
+            txInputs.add(new TransactionInput(this, i, input.getOutPoint(), input.getSeqNumber()));
             txWitness.add(new TransactionWitness(this, i));
         }
         //
@@ -337,7 +338,7 @@ public class Transaction implements ByteSerializable {
                 input.getOutPoint().getBytes(outBuffer);
                 outBuffer.putBytes(scriptCode)
                          .putLong(input.getValue().longValue())
-                         .putInt(-1)
+                         .putInt(input.getSeqNumber())
                          .putBytes(hashOutputs)
                          .putUnsignedInt(txLockTime)
                          .putInt(ScriptOpCodes.SIGHASH_ALL);
