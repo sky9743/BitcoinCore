@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Ronald Hoffman.
+ * Copyright 2014-2016 Ronald Hoffman.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -566,7 +566,7 @@ public class SerializedBuffer {
      * @return                          This buffer
      */
     public SerializedBuffer putBytes(List<? extends ByteSerializable> byteList) {
-        byteList.stream().forEach((elem) -> elem.getBytes(this));
+        byteList.forEach((elem) -> elem.getBytes(this));
         return this;
     }
 
@@ -593,8 +593,8 @@ public class SerializedBuffer {
             byte[] newBytes = new byte[bufferLimit-bufferStart+increment];
             System.arraycopy(bytes, bufferStart, newBytes, 0, bufferLimit-bufferStart);
             bytes = newBytes;
-            offset = offset-bufferStart;
-            segmentOffset = segmentOffset-bufferStart;
+            offset -= bufferStart;
+            segmentOffset -= bufferStart;
             bufferStart = 0;
             bufferLimit = bytes.length;
         }

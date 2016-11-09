@@ -1,6 +1,6 @@
 /**
  * Copyright 2011 Google Inc.
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -202,12 +202,14 @@ public class Block implements ByteSerializable {
     }
 
     /**
-     * <p>Returns the block version.  Only Version 1 and Version 2 blocks are supported.</p>
+     * <p>Returns the block version</p>
      * <ul>
      * <li>Blocks created before BIP 34 are Version 1 and do not contain the chain height
      * in the coinbase transaction input script</li>
      * <li>Blocks created after BIP 34 are Version 2 and contain the chain height in the coinbase
      * transaction input script</li>
+     * <li>Block created after BIP 9 implement the block version as a series of soft-fork bits.
+     * The first 3 bits are b'001' which means that the block version is x'20000000' or greater.</li>
      * </ul>
      *
      * @return      Block version
@@ -411,8 +413,6 @@ public class Block implements ByteSerializable {
      */
     private void readHeader(SerializedBuffer inBuffer) throws EOFException, VerificationException {
         blockVersion = inBuffer.getInt();
-        if (blockVersion < 1 || blockVersion > 3)
-            throw new VerificationException(String.format("Block version %d is not supported", blockVersion));
         prevBlockHash = new Sha256Hash(Utils.reverseBytes(inBuffer.getBytes(32)));
         merkleRoot = new Sha256Hash(Utils.reverseBytes(inBuffer.getBytes(32)));
         timeStamp = inBuffer.getUnsignedInt();

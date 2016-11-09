@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,14 +67,12 @@ public class TransactionInput implements ByteSerializable {
     /**
      * Create a transaction input from the encoded byte stream
      *
-     * @param       tx              Parent transaction
-     * @param       txIndex         Transaction input index
-     * @param       inBuffer        Input buffer
-     * @throws      EOFException    Input stream is too short
-     * @throws      VerificationException  Verification error
+     * @param       tx                      Parent transaction
+     * @param       txIndex                 Transaction input index
+     * @param       inBuffer                Input buffer
+     * @throws      EOFException            Input stream is too short
      */
-    public TransactionInput(Transaction tx, int txIndex, SerializedBuffer inBuffer)
-                                    throws EOFException, VerificationException {
+    public TransactionInput(Transaction tx, int txIndex, SerializedBuffer inBuffer) throws EOFException {
         this.tx = tx;
         this.txIndex = txIndex;
         //

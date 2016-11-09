@@ -1,6 +1,6 @@
 /**
  * Copyright 2011 Google Inc.
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.ScripterRon.BitcoinCore;
 
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.math.BigInteger;
 import java.math.BigDecimal;
 import java.security.MessageDigest;

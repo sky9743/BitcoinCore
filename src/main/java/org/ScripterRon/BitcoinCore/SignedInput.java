@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.ScripterRon.BitcoinCore;
 import java.math.BigInteger;
 
 /**
- * SignInput represents a transaction output that is being spent as part of
+ * SignedInput represents a transaction output that is being spent as part of
  * a new transaction.  It contains the key needed to sign the transaction as
  * well as the transaction output hash and index.
  */

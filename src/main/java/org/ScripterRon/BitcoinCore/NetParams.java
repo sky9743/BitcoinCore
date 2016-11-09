@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,19 @@ import java.util.Properties;
 public class NetParams {
 
     /** Protocol version */
-    public static final int PROTOCOL_VERSION = 70002;
+    public static final int PROTOCOL_VERSION = 70014;
 
     /** Minimum acceptable protocol version */
-    public static int MIN_PROTOCOL_VERSION = 60001;
+    public static int MIN_PROTOCOL_VERSION = 70001;
 
     /** Peer provides network services */
     public static final long NODE_NETWORK = 1;
+
+    /** Peer supports Bloom filters (Protocol version 70012 and later) */
+    public static final long NODE_BLOOM = 4;
+
+    /** Peer supports segregated witness (Protocol version 70014 and later) */
+    public static final long NODE_WITNESS = 8;
 
     /** Our supported services */
     public static long SUPPORTED_SERVICES = 0;
@@ -52,14 +58,23 @@ public class NetParams {
     /** Magic number */
     public static long MAGIC_NUMBER = MAGIC_NUMBER_PRODNET;
 
-    /** Production network address version */
+    /** Production network public key hash address version */
     public static final int ADDRESS_VERSION_PRODNET = 0;
 
-    /** Test network address version */
+    /** Test network public key hash address version */
     public static final int ADDRESS_VERSION_TESTNET = 111;
 
-    /** Address version */
+    /** Public key hash address version */
     public static int ADDRESS_VERSION = ADDRESS_VERSION_PRODNET;
+
+    /** Production network script hash address version */
+    public static final int SCRIPT_ADDRESS_VERSION_PRODNET = 5;
+
+    /** Test network script hash address version */
+    public static final int SCRIPT_ADDRESS_VERSION_TESTNET = 196;
+
+    /** Script hash address version */
+    public static int SCRIPT_ADDRESS_VERSION = SCRIPT_ADDRESS_VERSION_PRODNET;
 
     /** Production network dumped private key version */
     public static final int DUMPED_PRIVATE_KEY_VERSION_PRODNET = 128;
@@ -136,6 +151,7 @@ public class NetParams {
         if (testNetwork) {
             MAGIC_NUMBER = MAGIC_NUMBER_TESTNET;
             ADDRESS_VERSION = ADDRESS_VERSION_TESTNET;
+            SCRIPT_ADDRESS_VERSION = SCRIPT_ADDRESS_VERSION_TESTNET;
             DUMPED_PRIVATE_KEY_VERSION = DUMPED_PRIVATE_KEY_VERSION_TESTNET;
             GENESIS_BLOCK_HASH = GENESIS_BLOCK_TESTNET;
             GENESIS_BLOCK_TIME = GENESIS_TIME_TESTNET;
@@ -143,6 +159,7 @@ public class NetParams {
         } else {
             MAGIC_NUMBER = MAGIC_NUMBER_PRODNET;
             ADDRESS_VERSION = ADDRESS_VERSION_PRODNET;
+            ADDRESS_VERSION = SCRIPT_ADDRESS_VERSION_PRODNET;
             DUMPED_PRIVATE_KEY_VERSION = DUMPED_PRIVATE_KEY_VERSION_PRODNET;
             GENESIS_BLOCK_HASH = GENESIS_BLOCK_PRODNET;
             GENESIS_BLOCK_TIME = GENESIS_TIME_PRODNET;
