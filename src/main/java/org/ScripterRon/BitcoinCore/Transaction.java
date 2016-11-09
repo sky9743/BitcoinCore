@@ -106,8 +106,7 @@ public class Transaction implements ByteSerializable {
      * Creates a new transaction using the provided inputs
      *
      * A segregated witness transaction will be created if any of the inputs
-     * reference a segregated witness output or if any of the outputs contain
-     * a P2SH address.  Otherwise, we will create a normal transaction.
+     * reference a segregated witness output.  Otherwise, a normal transaction will be created.
      *
      * @param       inputs                  List of signed inputs
      * @param       outputs                 List of outputs
@@ -124,8 +123,7 @@ public class Transaction implements ByteSerializable {
      * Creates a new transaction using the provided inputs
      *
      * A segregated witness transaction will be created if any of the inputs
-     * reference a segregated witness output or if any of the outputs contain
-     * a P2SH address.  Otherwise, we will create a normal transaction.
+     * reference a segregated witness output.  Otherwise, a normal transaction will be created.
      *
      * @param       inputs                  List of signed inputs
      * @param       outputs                 List of outputs
@@ -149,10 +147,7 @@ public class Transaction implements ByteSerializable {
             if (Script.getPaymentType(scriptBytes) == ScriptOpCodes.PAY_TO_SCRIPT_HASH) {
                 byte[] checkHash = new byte[20];
                 System.arraycopy(scriptBytes, 2, checkHash, 0, 20);
-                byte[] redeemScript = new byte[1 + 1 + 20];
-                redeemScript[0] = (byte)ScriptOpCodes.OP_0;
-                redeemScript[1] = 20;
-                System.arraycopy(input.getKey().getPubKeyHash(), 0, redeemScript, 2, 20);
+                byte[] redeemScript = Script.getRedeemScript(input.getKey().getPubKeyHash(), false);
                 byte[] hash = Utils.sha256Hash160(redeemScript);
                 if (!Arrays.equals(hash, checkHash)) {
                     throw new VerificationException("Unsupported P2SH connected output");
@@ -283,71 +278,31 @@ public class Transaction implements ByteSerializable {
             txWitness.add(new TransactionWitness(this, i));
         }
         //
-        // Hash the previous outpoints
-        //
-        outBuffer.rewind();
-        for (SignedInput input : inputs) {
-            input.getOutPoint().getBytes(outBuffer);
-        }
-        byte[] hashPrevouts = Utils.doubleDigest(outBuffer.toByteArray());
-        //
-        // Hash the input sequence numbers
-        //
-        outBuffer.rewind();
-        for (TransactionInput input : txInputs) {
-            outBuffer.putInt(input.getSeqNumber());
-        }
-        byte[] hashSequence = Utils.doubleDigest(outBuffer.toByteArray());
-        //
-        // Hash the outputs
-        //
-        outBuffer.rewind();
-        for (TransactionOutput output : outputs) {
-            outBuffer.putBytes(output.getBytes());
-        }
-        byte[] hashOutputs = Utils.doubleDigest(outBuffer.toByteArray());
-        //
         // Create and sign the input scripts
         //
         for (int i=0; i<inputCount; i++) {
             SignedInput input = inputs.get(i);
             ECKey key = input.getKey();
             byte[] pubKey = key.getPubKey();
+            txInputs.get(i).setValue(input.getValue());
             if (Script.getPaymentType(input.getScriptBytes()) == ScriptOpCodes.PAY_TO_SCRIPT_HASH) {
                 //
                 // Spend a P2SH-P2WPKH output
                 //
                 outBuffer.rewind();
                 //
-                // Create the P2WPKH witness program
-                //
-                byte[] scriptCode = new byte[26];
-                scriptCode[0] = (byte)25;
-                scriptCode[1] = (byte)ScriptOpCodes.OP_DUP;
-                scriptCode[2] = (byte)ScriptOpCodes.OP_HASH160;
-                scriptCode[3] = (byte)20;
-                System.arraycopy(key.getPubKeyHash(), 0, scriptCode, 4, 20);
-                scriptCode[24] = (byte)ScriptOpCodes.OP_EQUALVERIFY;
-                scriptCode[25] = (byte)ScriptOpCodes.OP_CHECKSIG;
-                //
                 // Serialize the transaction for SIGHASH_ALL
                 //
-                outBuffer.putInt(txVersion)
-                         .putBytes(hashPrevouts)
-                         .putBytes(hashSequence);
-                input.getOutPoint().getBytes(outBuffer);
-                outBuffer.putBytes(scriptCode)
-                         .putLong(input.getValue().longValue())
-                         .putInt(input.getSeqNumber())
-                         .putBytes(hashOutputs)
-                         .putUnsignedInt(txLockTime)
-                         .putInt(ScriptOpCodes.SIGHASH_ALL);
+                byte[] subScriptBytes = Script.getWitnessProgram(key.getPubKeyHash(), true);
+                serializeForSignature(i, ScriptOpCodes.SIGHASH_ALL, subScriptBytes, outBuffer);
                 byte[] contents = outBuffer.toByteArray();
+                //System.out.println("Serialized for signature: " + javax.xml.bind.DatatypeConverter.printHexBinary(contents));
                 //
                 // Create the DER-encoded signature
                 //
                 ECDSASignature sig = key.createSignature(contents);
                 byte[] encodedSig = sig.encodeToDER();
+                //System.out.println("Signature: " + javax.xml.bind.DatatypeConverter.printHexBinary(encodedSig));
                 //
                 // Create the witness data
                 //
@@ -359,17 +314,11 @@ public class Transaction implements ByteSerializable {
                 witness.add(pubKey);
                 //
                 // Create the input script
-                //    <redeem script>
                 //
-                // Redeem script: OP_0 <20-byte pubkey hash>
-                //
-                byte[] scriptBytes = new byte[1+1+1+20];
-                scriptBytes[0] = (byte)22;
-                scriptBytes[1] = (byte)ScriptOpCodes.OP_0;
-                scriptBytes[2] = (byte)20;
-                System.arraycopy(key.getPubKeyHash(), 0, scriptBytes, 3, 20);
-                txInputs.get(i).setScriptBytes(scriptBytes);
+                txInputs.get(i).setScriptBytes(Script.getRedeemScript(key.getPubKeyHash(), true));
+
             } else {
+
                 //
                 // Spend a P2PKH output
                 //
@@ -378,7 +327,6 @@ public class Transaction implements ByteSerializable {
                 // Serialize the transaction for SIGHASH_ALL
                 //
                 serializeForSignature(i, ScriptOpCodes.SIGHASH_ALL, input.getScriptBytes(), outBuffer);
-                outBuffer.putInt(ScriptOpCodes.SIGHASH_ALL);
                 byte[] contents = outBuffer.toByteArray();
                 //
                 // Create the DER-encoded signature
@@ -420,6 +368,7 @@ public class Transaction implements ByteSerializable {
         //
         outBuffer.rewind();
         witnessTxData = getWitnessBytes(outBuffer).toByteArray();
+        //System.out.println("Witness TX data: " + javax.xml.bind.DatatypeConverter.printHexBinary(witnessTxData));
         //
         // Calculate the witness transaction hash
         //
@@ -829,60 +778,128 @@ public class Transaction implements ByteSerializable {
                         hashType != ScriptOpCodes.SIGHASH_NONE &&
                         hashType != ScriptOpCodes.SIGHASH_SINGLE)
             hashType = ScriptOpCodes.SIGHASH_ALL;
-        //
-        // Serialize the version
-        //
-        outBuffer.putInt(txVersion);
-        //
-        // Serialize the inputs
-        //
-        // For SIGHASH_ANYONE_CAN_PAY, only the current input is included in the signature.
-        // Otherwise, all inputs are included.
-        //
-        List<TransactionInput> sigInputs;
-        if (anyoneCanPay) {
-            sigInputs = new ArrayList<>(1);
-            sigInputs.add(txInputs.get(index));
-        } else {
-            sigInputs = txInputs;
-        }
-        outBuffer.putVarInt(sigInputs.size());
-        byte[] emptyScriptBytes = new byte[0];
-        for (TransactionInput txInput : sigInputs)
-            txInput.serializeForSignature(index, hashType,
-                                          (txInput.getIndex()==index?subScriptBytes:emptyScriptBytes),
-                                          outBuffer);
-        //
-        // Serialize the outputs
-        //
-        if (hashType == ScriptOpCodes.SIGHASH_NONE) {
+
+        if (segWit) {
+            SerializedBuffer workBuffer = new SerializedBuffer(256);
             //
-            // There are no outputs for SIGHASH_NONE
+            // Hash the connected outputs
             //
-            outBuffer.putVarInt(0);
-        } else if (hashType == ScriptOpCodes.SIGHASH_SINGLE) {
-            //
-            // The output list is resized to the input index+1
-            //
-            if (txOutputs.size() <= index)
-                throw new ScriptException("Input index out-of-range for SIGHASH_SINGLE");
-            outBuffer.putVarInt(index+1);
-            for (TransactionOutput txOutput : txOutputs) {
-                if (txOutput.getIndex() > index)
-                    break;
-                txOutput.serializeForSignature(index, hashType, outBuffer);
+            byte[] hashPrevouts;
+            if (anyoneCanPay) {
+                hashPrevouts = new byte[32];
+            } else {
+                for (TransactionInput input : txInputs) {
+                    input.getOutPoint().getBytes(workBuffer);
+                }
+                hashPrevouts = Utils.doubleDigest(workBuffer.toByteArray());
+                //System.out.println("hashPrevouts: " + javax.xml.bind.DatatypeConverter.printHexBinary(hashPrevouts));
             }
+            //
+            // Hash the input sequence numbers
+            //
+            byte[] hashSequence;
+            if (anyoneCanPay || hashType == ScriptOpCodes.SIGHASH_SINGLE || hashType == ScriptOpCodes.SIGHASH_NONE) {
+                hashSequence = new byte[32];
+            } else {
+                workBuffer.rewind();
+                for (TransactionInput input : txInputs) {
+                    workBuffer.putInt(input.getSeqNumber());
+                }
+                hashSequence = Utils.doubleDigest(workBuffer.toByteArray());
+                //System.out.println("hashSequence: " + javax.xml.bind.DatatypeConverter.printHexBinary(hashSequence));
+            }
+            //
+            // Hash the outputs
+            //
+            byte[] hashOutputs;
+            if(hashType == ScriptOpCodes.SIGHASH_SINGLE) {
+                if (index < txOutputs.size()) {
+                    hashOutputs = Utils.doubleDigest(txOutputs.get(index).getBytes());
+                } else {
+                    hashOutputs = new byte[32];
+                }
+            } else if (hashType == ScriptOpCodes.SIGHASH_NONE) {
+                hashOutputs = new byte[32];
+            } else {
+                workBuffer.rewind();
+                for (TransactionOutput output : txOutputs) {
+                    output.getBytes(workBuffer);
+                }
+                hashOutputs = Utils.doubleDigest(workBuffer.toByteArray());
+                //System.out.println("hashOutputs: " + javax.xml.bind.DatatypeConverter.printHexBinary(hashOutputs));
+            }
+            //
+            // Serialize the transaction
+            //
+            TransactionInput input = txInputs.get(index);
+            outBuffer.putInt(txVersion)
+                     .putBytes(hashPrevouts)
+                     .putBytes(hashSequence)
+                     .putBytes(input.getOutPoint().getBytes())
+                     .putBytes(subScriptBytes)
+                     .putLong(input.getValue().longValue())
+                     .putInt(input.getSeqNumber())
+                     .putBytes(hashOutputs)
+                     .putUnsignedInt(txLockTime)
+                     .putInt(sigHashType);
+
         } else {
+
             //
-            // All outputs are serialized for SIGHASH_ALL
+            // Serialize the version
             //
-            outBuffer.putVarInt(txOutputs.size());
-            for (TransactionOutput txOutput : txOutputs)
-                txOutput.serializeForSignature(index, hashType, outBuffer);
+            outBuffer.putInt(txVersion);
+            //
+            // Serialize the inputs
+            //
+            // For SIGHASH_ANYONE_CAN_PAY, only the current input is included in the signature.
+            // Otherwise, all inputs are included.
+            //
+            List<TransactionInput> sigInputs;
+            if (anyoneCanPay) {
+                sigInputs = new ArrayList<>(1);
+                sigInputs.add(txInputs.get(index));
+            } else {
+                sigInputs = txInputs;
+            }
+            outBuffer.putVarInt(sigInputs.size());
+            byte[] emptyScriptBytes = new byte[0];
+            for (TransactionInput txInput : sigInputs)
+                txInput.serializeForSignature(index, hashType,
+                                              (txInput.getIndex()==index?subScriptBytes:emptyScriptBytes),
+                                              outBuffer);
+            //
+            // Serialize the outputs
+            //
+            if (hashType == ScriptOpCodes.SIGHASH_NONE) {
+                //
+                // There are no outputs for SIGHASH_NONE
+                //
+                outBuffer.putVarInt(0);
+            } else if (hashType == ScriptOpCodes.SIGHASH_SINGLE) {
+                //
+                // The output list is resized to the input index+1
+                //
+                if (txOutputs.size() <= index)
+                    throw new ScriptException("Input index out-of-range for SIGHASH_SINGLE");
+                outBuffer.putVarInt(index+1);
+                for (TransactionOutput txOutput : txOutputs) {
+                    if (txOutput.getIndex() > index)
+                        break;
+                    txOutput.serializeForSignature(index, hashType, outBuffer);
+                }
+            } else {
+                //
+                // All outputs are serialized for SIGHASH_ALL
+                //
+                outBuffer.putVarInt(txOutputs.size());
+                for (TransactionOutput txOutput : txOutputs)
+                    txOutput.serializeForSignature(index, hashType, outBuffer);
+            }
+            //
+            // Serialize the lock time and hash type
+            //
+            outBuffer.putUnsignedInt(txLockTime).putInt(sigHashType);
         }
-        //
-        // Serialize the lock time
-        //
-        outBuffer.putUnsignedInt(txLockTime);
     }
 }

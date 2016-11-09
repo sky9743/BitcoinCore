@@ -211,6 +211,65 @@ public class Script {
     }
 
     /**
+     * Build the P2SH-P2WPKH redeem script
+     *
+     * OP_0 <pubkey-hash>
+     *
+     * @param       pubKeyHash          Public key hash
+     * @param       encodeLength        TRUE to encode the script length
+     * @return                          P2SH redeem script
+     */
+    public static byte[] getRedeemScript(byte[] pubKeyHash, boolean encodeLength) {
+        if (pubKeyHash.length != 20)
+            throw new IllegalArgumentException("Public key hash is not 20 bytes");
+        byte[] scriptBytes;
+        int base;
+        if (encodeLength) {
+            scriptBytes = new byte[23];
+            scriptBytes[0] =(byte)22;
+            base = 1;
+        } else {
+            scriptBytes = new byte[22];
+            base = 0;
+        }
+        scriptBytes[base+0] = (byte)ScriptOpCodes.OP_0;
+        scriptBytes[base+1] = (byte)20;
+        System.arraycopy(pubKeyHash, 0, scriptBytes, base+2, 20);
+        return scriptBytes;
+    }
+
+    /**
+     * Build the P2WPKH witness program
+     *
+     * OP_DUP OP_HASH160 <pubkey-hash> OP_EQUALVERIFY OP_CHECKSIG
+     *
+     * @param       pubKeyHash          Public key hash
+     * @param       encodeLength        TRUE to encode the script length
+     * @return                          P2WPKH witness program
+     */
+    public static byte[] getWitnessProgram(byte[] pubKeyHash, boolean encodeLength) {
+        if (pubKeyHash.length != 20)
+            throw new IllegalArgumentException("Public key hash is not 20 bytes");
+        byte[] scriptBytes;
+        int base;
+        if (encodeLength) {
+            scriptBytes = new byte[26];
+            scriptBytes[0] = (byte)25;
+            base = 1;
+        } else {
+            scriptBytes = new byte[25];
+            base = 0;
+        }
+        scriptBytes[base+0] = (byte)ScriptOpCodes.OP_DUP;
+        scriptBytes[base+1] = (byte)ScriptOpCodes.OP_HASH160;
+        scriptBytes[base+2] = (byte)20;
+        System.arraycopy(pubKeyHash, 0, scriptBytes, base+3, 20);
+        scriptBytes[base+23] = (byte)ScriptOpCodes.OP_EQUALVERIFY;
+        scriptBytes[base+24] = (byte)ScriptOpCodes.OP_CHECKSIG;
+        return scriptBytes;
+    }
+
+    /**
      * Get the length of the next data element
      *
      * @param       opcode              Current opcode

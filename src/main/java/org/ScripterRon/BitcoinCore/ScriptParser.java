@@ -48,6 +48,7 @@ public class ScriptParser {
      */
     public static boolean process(TransactionInput txInput, TransactionOutput txOutput, int chainHeight)
                                         throws ScriptException {
+        txInput.setValue(txOutput.getValue());
         Transaction tx = txInput.getTransaction();
         boolean txValid = true;
         boolean pay2ScriptHash = false;
@@ -811,7 +812,6 @@ public class ScriptParser {
         if ((hashType&0x7f) != ScriptOpCodes.SIGHASH_SINGLE || txInput.getIndex() < tx.getOutputs().size()) {
             SerializedBuffer outBuffer = new SerializedBuffer(1024);
             tx.serializeForSignature(txInput.getIndex(), hashType, subProgram, outBuffer);
-            outBuffer.putInt(hashType);
             txData = outBuffer.toByteArray();
         } else {
             txData = null;

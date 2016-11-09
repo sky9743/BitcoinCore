@@ -16,6 +16,7 @@
 package org.ScripterRon.BitcoinCore;
 
 import java.io.EOFException;
+import java.math.BigInteger;
 
 /**
  * <p>A transaction input has the following format:</p>
@@ -49,6 +50,9 @@ public class TransactionInput implements ByteSerializable {
     /** Transaction input index */
     private final int txIndex;
 
+    /** Input amount (must be set by the application as needed) */
+    private BigInteger value;
+
     /**
      * Create a transaction input for the specified outpoint.
      *
@@ -74,6 +78,7 @@ public class TransactionInput implements ByteSerializable {
         this.outPoint = outPoint;
         this.seqNumber = seqNumber;
         this.scriptBytes = new byte[0];
+        this.value = BigInteger.ZERO;
     }
 
     /**
@@ -87,6 +92,7 @@ public class TransactionInput implements ByteSerializable {
     public TransactionInput(Transaction tx, int txIndex, SerializedBuffer inBuffer) throws EOFException {
         this.tx = tx;
         this.txIndex = txIndex;
+        this.value = BigInteger.ZERO;
         //
         // Get the transaction output connected to this input
         //
@@ -179,6 +185,27 @@ public class TransactionInput implements ByteSerializable {
      */
     public int getSeqNumber() {
         return seqNumber;
+    }
+
+    /**
+     * Return the number of coins spent by this input
+     *
+     * Note: This value must be set by the application since it is not part of the
+     * serialized transaction input
+     *
+     * @return                      Amount
+     */
+    public BigInteger getValue() {
+        return value;
+    }
+
+    /**
+     * Set the number of coins spent by this input
+     *
+     * @param       value           Amount
+     */
+    public void setValue(BigInteger value) {
+        this.value = value;
     }
 
     /**
