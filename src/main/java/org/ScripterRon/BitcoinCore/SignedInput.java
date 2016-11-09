@@ -36,6 +36,9 @@ public class SignedInput {
     /** Key associated with the transaction output */
     private final ECKey key;
 
+    /** Transaction input sequence number */
+    private final int seqNumber;
+
     /**
      * Creates a new SignedInput
      *
@@ -45,10 +48,24 @@ public class SignedInput {
      * @param       scriptBytes         Transaction output script bytes
      */
     public SignedInput(ECKey key, OutPoint outPoint, BigInteger value, byte[] scriptBytes) {
+        this(key, outPoint, value, scriptBytes, -1);
+    }
+
+    /**
+     * Creates a new SignedInput
+     *
+     * @param       key                 Key to sign the transaction
+     * @param       outPoint            Connected transaction output
+     * @param       value               Transaction output value
+     * @param       scriptBytes         Transaction output script bytes
+     * @param       seqNumber           Transaction input sequence number
+     */
+    public SignedInput(ECKey key, OutPoint outPoint, BigInteger value, byte[] scriptBytes, int seqNumber) {
         this.key = key;
         this.outPoint = outPoint;
         this.value = value;
         this.scriptBytes = scriptBytes;
+        this.seqNumber = seqNumber;
     }
 
     /**
@@ -85,5 +102,14 @@ public class SignedInput {
      */
     public byte[] getScriptBytes() {
         return scriptBytes;
+    }
+
+    /**
+     * Return the input sequence number
+     *
+     * @return                          Transaction input sequence number
+     */
+    public int getSeqNumber() {
+        return seqNumber;
     }
 }

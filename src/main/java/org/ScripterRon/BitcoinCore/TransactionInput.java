@@ -57,10 +57,22 @@ public class TransactionInput implements ByteSerializable {
      * @param       outPoint                Connected transaction output
      */
     public TransactionInput(Transaction tx, int txIndex, OutPoint outPoint) {
+        this(tx, txIndex, outPoint, -1);
+    }
+
+    /**
+     * Create a transaction input for the specified outpoint.
+     *
+     * @param       tx                      Parent transaction
+     * @param       txIndex                 Transaction input index
+     * @param       outPoint                Connected transaction output
+     * @param       seqNumber               Transaction input sequence number
+     */
+    public TransactionInput(Transaction tx, int txIndex, OutPoint outPoint, int seqNumber) {
         this.tx = tx;
         this.txIndex = txIndex;
         this.outPoint = outPoint;
-        this.seqNumber = -1;
+        this.seqNumber = seqNumber;
         this.scriptBytes = new byte[0];
     }
 

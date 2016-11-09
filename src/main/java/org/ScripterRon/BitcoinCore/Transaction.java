@@ -449,7 +449,7 @@ public class Transaction implements ByteSerializable {
         if (inCount == 0) {
             segWit = true;
             if (inBuffer.getByte() != (byte)1) {
-                throw new VerificationException("Unsupported witness transaction masker");
+                throw new VerificationException("Unsupported witness transaction marker");
             }
             inCount = inBuffer.getVarInt();
         } else {
