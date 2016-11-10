@@ -17,7 +17,6 @@ package org.ScripterRon.BitcoinCore;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
@@ -38,7 +37,7 @@ public class TestWitness {
     @Test
     public void testWitness() {
         try {
-            System.out.println("Running Segregated Witness test");
+            System.out.println("Testing Segregated Witness support");
             //
             // Create the signed inputs
             //
@@ -91,7 +90,7 @@ public class TestWitness {
             // Check the serialized transaction bytes
             //
             byte[] checkTxBytes = DatatypeConverter.parseHexBinary("01000000000101db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a5477010000001716001479091972186c449eb1ded22b78e40d009bdf0089feffffff02b8b4eb0b000000001976a914a457b684d7f0d539a46a45bbc043f35b59d0d96388ac0008af2f000000001976a914fd270b1ee6abcaea97fea7ad0402e8bd8ad6d77c88ac02473044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb012103ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f7d6f93a2a2687392040000");
-            assertArrayEquals(checkTxBytes, tx.getWitnessBytes());
+            assertArrayEquals("New transaction: Serialized bytes incorrect", checkTxBytes, tx.getWitnessBytes());
             //
             // Create a new transaction using the serialized bytes
             //
@@ -102,8 +101,11 @@ public class TestWitness {
             //
             // Check the serialized transaction bytes
             //
-            assertArrayEquals(checkTxBytes, checkTx.getWitnessBytes());
-            System.out.println("Completed Segregated Witness test");
+            assertArrayEquals("Payload transaction: Serialized bytes incorrect", checkTxBytes, checkTx.getWitnessBytes());
+            //
+            // All done
+            //
+            System.out.println("Segregated Witness tests completed");
         } catch (Exception exc) {
             exc.printStackTrace(System.err);
             throw new RuntimeException("Exception during Segregated Witness test", exc);
