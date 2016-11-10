@@ -204,7 +204,6 @@ public class Transaction implements ByteSerializable {
             //
             outBuffer.rewind();
             serializeForSignature(i, ScriptOpCodes.SIGHASH_ALL, input.getScriptBytes(), outBuffer);
-            outBuffer.putInt(ScriptOpCodes.SIGHASH_ALL);
             contents = outBuffer.toByteArray();
             //
             // Create the DER-encoded signature

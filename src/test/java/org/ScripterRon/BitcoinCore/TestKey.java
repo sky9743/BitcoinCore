@@ -19,8 +19,6 @@ import java.math.BigInteger;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.bouncycastle.crypto.signers.ECDSASigner;
-
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
