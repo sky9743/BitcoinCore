@@ -51,14 +51,53 @@ public class ScriptParser {
         txInput.setValue(txOutput.getValue());
         Transaction tx = txInput.getTransaction();
         boolean txValid = true;
-        boolean pay2ScriptHash = false;
+        boolean witnessInput = tx.isWitness() && !tx.getWitness().get(txInput.getIndex()).getWitness().isEmpty();
         List<byte[]> scriptStack = new ArrayList<>(5);
         List<StackElement> elemStack = new ArrayList<>(25);
         List<StackElement> altStack = new ArrayList<>(5);
         byte[] inputScriptBytes = txInput.getScriptBytes();
+        byte[] outputScriptBytes = txOutput.getScriptBytes();
+        //
+        // Check for a native witness program (BIP0141)
+        //
+        // Version 0 is either P2WPKH or P2WSH as determined by the program length.
+        // Non-zero versions are reserved for future use and are ignored.
+        //
+        if (witnessInput) {
+            byte[][] result = Script.getWitnessProgram(outputScriptBytes);
+            if (result != null) {
+                if (inputScriptBytes.length != 0)
+                    throw new ScriptException(
+                            "Non-empty ScriptSig for native witness program\n Tx " + tx.getHashAsString());
+                int version = result[0][0];
+                byte[] witnessBytes = result[1];
+                if (version != 0)
+                    return true;
+                TransactionWitness txWitness = tx.getWitness().get(txInput.getIndex());
+                if (witnessBytes.length == 20) {
+                    if (txWitness.getWitness().size() != 2)
+                        throw new ScriptException(
+                                "Witness data count is not 2 for P2WPKH\n Tx " + tx.getHashAsString());
+                    byte[] pubKey = txWitness.getWitness().get(1);
+                    if (pubKey[0] != 0x02 && pubKey[0] != 0x03)
+                        throw new ScriptException(
+                                "Public key is not compressed for P2WPKH\n Tx " + tx.getHashAsString());
+                    inputScriptBytes = txWitness.getScriptSig();
+                    outputScriptBytes = Script.getScriptPubKey(Address.AddressType.P2PKH, witnessBytes, false);
+                } else {
+                    if (txWitness.getWitness().isEmpty())
+                        throw new ScriptException(
+                                "No witness data for P2WSH\n Tx " + tx.getHashAsString());
+                    inputScriptBytes = txWitness.getScriptSig();
+                    outputScriptBytes = Script.getScriptPubKey(Address.AddressType.P2SH, Utils.hash160(witnessBytes), false);
+                }
+            }
+        }
+        //
+        // Create the script stack
+        //
         if (inputScriptBytes.length != 0)
             scriptStack.add(inputScriptBytes);
-        byte[] outputScriptBytes = txOutput.getScriptBytes();
         if (outputScriptBytes.length != 0)
             scriptStack.add(outputScriptBytes);
         if (verboseDebug)
@@ -70,53 +109,61 @@ public class ScriptParser {
         if (scriptStack.isEmpty())
             return false;
         //
-        // Check for a pay-to-script-hash output (BIP0016)
-        //
-        // The output script: OP_HASH160 <20-byte hash> OP_EQUAL
-        // The inputs script: can contain only data elements and must have at least two elements
-        // The block height must be greater than 175,000
-        //
-        if (chainHeight > 175000 && scriptStack.size() == 2 &&
-                                    outputScriptBytes.length == 23 &&
-                                    outputScriptBytes[0] == (byte)ScriptOpCodes.OP_HASH160 &&
-                                    outputScriptBytes[1] == 20 &&
-                                    outputScriptBytes[22] == (byte)ScriptOpCodes.OP_EQUAL) {
-            int offset = 0;
-            int count = 0;
-            pay2ScriptHash = true;
-            try {
-                while (offset < inputScriptBytes.length) {
-                    int opcode = (int)inputScriptBytes[offset++]&0xff;
-                    if (opcode <= ScriptOpCodes.OP_PUSHDATA4) {
-                        int[] result = Script.getDataLength(opcode, inputScriptBytes, offset);
-                        offset = result[0] + result[1];
-                        count++;
-                    } else {
-                        pay2ScriptHash = false;
-                        break;
-                    }
-                }
-                if (count < 2)
-                    pay2ScriptHash = false;
-            } catch (EOFException exc) {
-                throw new ScriptException(String.format("End-of-data while scanning input script\n  Tx %s",
-                                                        tx.getHash().toString()), exc);
-            }
-        }
-        //
         // Process the script segments
         //
         try {
-            boolean p2sh = pay2ScriptHash;
+            boolean p2sh = false;
             while (txValid && !scriptStack.isEmpty()) {
+                //
+                // Process the top script segment
+                //
                 txValid = processScript(txInput, scriptStack, elemStack, altStack, p2sh);
                 scriptStack.remove(0);
-                if (pay2ScriptHash && !scriptStack.isEmpty()) {
+                //
+                // Check for P2SH witness program (BIP0141)
+                //
+                if (witnessInput && txValid && p2sh && !scriptStack.isEmpty()) {
+                    byte[] scriptBytes = scriptStack.get(0);
+                    byte[][] result = Script.getWitnessProgram(scriptBytes);
+                    if (result != null) {
+                        scriptStack.remove(0);
+                        if (!elemStack.isEmpty())
+                            throw new ScriptException(
+                                    "Non-empty element stack for P2SH witness program\n Tx " + tx.getHashAsString());
+                        int version = result[0][0];
+                        byte[] witnessBytes = result[1];
+                        if (version != 0)
+                            return true;
+                        TransactionWitness txWitness = tx.getWitness().get(txInput.getIndex());
+                        if (witnessBytes.length == 20) {
+                            if (txWitness.getWitness().size() != 2)
+                                throw new ScriptException(
+                                        "Witness data count is not 2 for P2WPKH\n Tx " + tx.getHashAsString());
+                            byte[] pubKey = txWitness.getWitness().get(1);
+                            if (pubKey[0] != 0x02 && pubKey[0] != 0x03)
+                                throw new ScriptException(
+                                        "Public key is not compressed for P2WPKH\n Tx " + tx.getHashAsString());
+                            scriptStack.add(txWitness.getScriptSig());
+                            scriptStack.add(Script.getScriptPubKey(Address.AddressType.P2PKH, witnessBytes, false));
+                        } else {
+                            if (txWitness.getWitness().isEmpty())
+                                throw new ScriptException(
+                                        "No witness data for P2WSH\n Tx " + tx.getHashAsString());
+                            scriptStack.add(txWitness.getScriptSig());
+                            scriptStack.add(Script.getScriptPubKey(Address.AddressType.P2SH, Utils.hash160(witnessBytes), false));
+                        }
+                    }
+                }
+                //
+                // Check if the next script is P2SH
+                //
+                if (txValid && !scriptStack.isEmpty()) {
                     byte[] scriptBytes = scriptStack.get(0);
                     p2sh = (scriptBytes.length == 23 &&
                             scriptBytes[0] == (byte)ScriptOpCodes.OP_HASH160 &&
                             scriptBytes[1] == 20 &&
-                            scriptBytes[22] == (byte)ScriptOpCodes.OP_EQUAL);
+                            scriptBytes[22] == (byte)ScriptOpCodes.OP_EQUAL &&
+                            !elemStack.isEmpty());
                 }
             }
         } catch (Throwable exc) {
@@ -149,7 +196,7 @@ public class ScriptParser {
                                         List<StackElement> elemStack, List<StackElement> altStack,
                                         boolean p2sh) throws EOFException, ScriptException {
         boolean txValid = true;
-        boolean skipping = false;
+        boolean skipping;
         byte[] scriptBytes = scriptStack.get(0);
         int offset = 0;
         int lastSeparator = 0;
@@ -809,8 +856,10 @@ public class ScriptParser {
         //
         Transaction tx = txInput.getTransaction();
         byte[] txData;
-        if ((hashType&0x7f) != ScriptOpCodes.SIGHASH_SINGLE || txInput.getIndex() < tx.getOutputs().size()) {
-            SerializedBuffer outBuffer = new SerializedBuffer(1024);
+        boolean witnessInput = tx.isWitness() && !tx.getWitness().get(txInput.getIndex()).getWitness().isEmpty();
+        SerializedBuffer outBuffer = new SerializedBuffer(1024);
+        if (!witnessInput &&
+                (hashType&0x7f) != ScriptOpCodes.SIGHASH_SINGLE || txInput.getIndex() < tx.getOutputs().size()) {
             tx.serializeForSignature(txInput.getIndex(), hashType, subProgram, outBuffer);
             txData = outBuffer.toByteArray();
         } else {
@@ -822,11 +871,20 @@ public class ScriptParser {
         // the list if it verifies a signature to prevent one person from signing the
         // transaction multiple times.
         //
+        // We need to serialize a witness transaction for each public key since the public key
+        // hash is included in the serialized data.
+        //
         Iterator<StackElement> it = pubKeys.iterator();
         while (it.hasNext()) {
             StackElement pubKey = it.next();
             ECKey ecKey = new ECKey(pubKey.getBytes());
             try {
+                if (witnessInput) {
+                    outBuffer.rewind();
+                    byte[] witnessProgram = Script.getWitnessProgram(ecKey.getPubKeyHash(), true);
+                    tx.serializeForSignature(txInput.getIndex(), hashType, witnessProgram, outBuffer);
+                    txData = outBuffer.toByteArray();
+                }
                 isValid = ecKey.verifySignature(txData, encodedSig);
             } catch (ECException exc) {
                 it.remove();

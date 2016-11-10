@@ -632,6 +632,15 @@ public class Transaction implements ByteSerializable {
     }
 
     /**
+     * Checks if this is a witness transaction
+     *
+     * @return      TRUE if this is a witness transaction
+     */
+    public boolean isWitness() {
+        return segWit;
+    }
+
+    /**
      * Returns the hash code for this transaction.  This is based on the transaction hash but is
      * not the same value.
      *

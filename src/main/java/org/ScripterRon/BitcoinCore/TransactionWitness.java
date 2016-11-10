@@ -123,4 +123,60 @@ public class TransactionWitness implements ByteSerializable {
     public List<byte[]> getWitness() {
         return txWitness;
     }
+
+    /**
+     * Build the ScriptSig from the witness data
+     *
+     * @return                      ScriptSig
+     */
+    public byte[] getScriptSig() {
+        //
+        // Calculate the total length
+        //
+        int length = 0;
+        for (byte[] bytes : txWitness) {
+            if (bytes.length < ScriptOpCodes.OP_PUSHDATA1) {
+                length++;
+            } else if (bytes.length < 256) {
+                length += 2;
+            } else if (bytes.length < 65536) {
+                length += 3;
+            } else {
+                length += 5;
+            }
+            length += bytes.length;
+        }
+        //
+        // Create the script
+        //
+        byte[] scriptBytes = new byte[length];
+        int offset = 0;
+        for (byte[] bytes : txWitness) {
+            if (bytes.length < ScriptOpCodes.OP_PUSHDATA1) {
+                scriptBytes[offset] = (byte)bytes.length;
+                System.arraycopy(bytes, 0, scriptBytes, offset+1, bytes.length);
+                offset += 1 + bytes.length;
+            } else if (bytes.length < 256) {
+                scriptBytes[offset] = (byte)ScriptOpCodes.OP_PUSHDATA1;
+                scriptBytes[offset+1] = (byte)bytes.length;
+                System.arraycopy(bytes, 0, scriptBytes, offset+2, bytes.length);
+                offset += 2 + bytes.length;
+            } else if (bytes.length < 65536) {
+                scriptBytes[offset] = (byte)ScriptOpCodes.OP_PUSHDATA2;
+                scriptBytes[offset+1] = (byte)bytes.length;
+                scriptBytes[offset+2] = (byte)(bytes.length>>8);
+                System.arraycopy(bytes, 0, scriptBytes, offset+3, bytes.length);
+                offset += 3 + bytes.length;
+            } else {
+                scriptBytes[offset] = (byte)ScriptOpCodes.OP_PUSHDATA4;
+                scriptBytes[offset+1] = (byte)bytes.length;
+                scriptBytes[offset+2] = (byte)(bytes.length>>8);
+                scriptBytes[offset+3] = (byte)(bytes.length>>16);
+                scriptBytes[offset+4] = (byte)(bytes.length>>24);
+                System.arraycopy(bytes, 0, scriptBytes, offset+5, bytes.length);
+                offset += 5 + bytes.length;
+            }
+        }
+        return scriptBytes;
+    }
 }

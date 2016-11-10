@@ -22,6 +22,8 @@ import java.util.List;
 import javax.xml.bind.DatatypeConverter;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 /**
@@ -38,6 +40,7 @@ public class TestWitness {
     public void testWitness() {
         try {
             System.out.println("Testing Segregated Witness support");
+            NetParams.SUPPORTED_SERVICES = NetParams.NODE_WITNESS;
             //
             // Create the signed inputs
             //
@@ -102,6 +105,18 @@ public class TestWitness {
             // Check the serialized transaction bytes
             //
             assertArrayEquals("Payload transaction: Serialized bytes incorrect", checkTxBytes, checkTx.getWitnessBytes());
+            //
+            // Validate the transaction signature
+            //
+            List<TransactionInput> txInputs = tx.getInputs();
+            assertEquals("Incorrect number of inputs", inputs.size(), txInputs.size());
+            for (int i=0; i<txInputs.size(); i++) {
+                input = inputs.get(i);
+                outPoint = input.getOutPoint();
+                output = new TransactionOutput(outPoint.getIndex(), input.getValue(), input.getScriptBytes());
+                assertTrue("Transaction signature validation failed",
+                        ScriptParser.process(txInputs.get(i), output, 400000));
+            }
             //
             // All done
             //

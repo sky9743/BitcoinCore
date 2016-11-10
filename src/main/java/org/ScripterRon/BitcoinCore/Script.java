@@ -211,6 +211,65 @@ public class Script {
     }
 
     /**
+     * Build the ScriptPubKey
+     *
+     * @param       address             Payment address
+     * @param       encodeLength        TRUE to encode the script length
+     * @return                          ScriptPubKey
+     */
+    public static byte[] getScriptPubKey(Address address, boolean encodeLength) {
+        return getScriptPubKey(address.getType(), address.getHash(), encodeLength);
+    }
+
+    /**
+     * Build the ScriptPubKey
+     *
+     * @param       type                Address type
+     * @param       hash                Address hash
+     * @param       encodeLength        TRUE to encode the script length
+     * @return                          ScriptPubKey
+     */
+    public static byte[] getScriptPubKey(Address.AddressType type, byte[] hash, boolean encodeLength) {
+        byte[] scriptBytes;
+        int base;
+        switch (type) {
+            case P2PKH:
+                if (encodeLength) {
+                    scriptBytes = new byte[26];
+                    scriptBytes[0] = (byte)25;
+                    base = 1;
+                } else {
+                    scriptBytes = new byte[25];
+                    base = 0;
+                }
+                scriptBytes[base+0] = (byte)ScriptOpCodes.OP_DUP;
+                scriptBytes[base+1] = (byte)ScriptOpCodes.OP_HASH160;
+                scriptBytes[base+2] = (byte)20;
+                System.arraycopy(hash, 0, scriptBytes, base+3, 20);
+                scriptBytes[base+23] = (byte)ScriptOpCodes.OP_EQUALVERIFY;
+                scriptBytes[base+24] = (byte)ScriptOpCodes.OP_CHECKSIG;
+                break;
+            case P2SH:
+                if (encodeLength) {
+                    scriptBytes = new byte[24];
+                    scriptBytes[0] = (byte)23;
+                    base = 1;
+                } else {
+                    scriptBytes = new byte[23];
+                    base = 0;
+                }
+                scriptBytes[base+0] = (byte)ScriptOpCodes.OP_HASH160;
+                scriptBytes[base+1] = (byte)20;
+                System.arraycopy(hash, 0, scriptBytes, base+2, 20);
+                scriptBytes[base+22] = (byte)ScriptOpCodes.OP_EQUAL;
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported address type");
+        }
+        return scriptBytes;
+    }
+
+    /**
      * Build the P2SH-P2WPKH redeem script
      *
      * OP_0 <pubkey-hash>
@@ -267,6 +326,41 @@ public class Script {
         scriptBytes[base+23] = (byte)ScriptOpCodes.OP_EQUALVERIFY;
         scriptBytes[base+24] = (byte)ScriptOpCodes.OP_CHECKSIG;
         return scriptBytes;
+    }
+
+    /**
+     * Get the witness program
+     *
+     * A witness script consists of exactly two data push operations.  The first
+     * push defines the version and the second push is the witness program.
+     *
+     * The return value consists of two values: the first value is the version
+     * and the second value is the witness program.
+     *
+     * @param       scriptBytes         Script bytes
+     * @return                          Witness program or null if not a witness script
+     * @throws      ScriptException     Script is not valid
+     */
+    public static byte[][] getWitnessProgram(byte[] scriptBytes) throws ScriptException {
+        byte[][] witnessBytes = null;
+        if (scriptBytes.length >= 2 &&
+                scriptBytes[0] >= (byte)0 && scriptBytes[0] <= (byte)16 &&
+                scriptBytes[1] >= (byte)0 && scriptBytes[1] <= (byte)40) {
+            int version = (int)scriptBytes[0]&0xff;
+            int length = (int)scriptBytes[1]&0xff;
+            if (length+2 > scriptBytes.length)
+                throw new ScriptException("End of script reached processing witness program");
+            if (length+2 == scriptBytes.length) {
+                if (version == 0 && length != 20 && length != 32)
+                        throw new ScriptException("Version 0 witness program length is not 20 or 32");
+                witnessBytes = new byte[2][];
+                witnessBytes[0] = new byte[1];
+                witnessBytes[0][0] = (byte)version;
+                witnessBytes[1] = new byte[length];
+                System.arraycopy(scriptBytes, 2, witnessBytes[1], 0, length);
+            }
+        }
+        return witnessBytes;
     }
 
     /**
