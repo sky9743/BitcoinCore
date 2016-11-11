@@ -34,11 +34,17 @@ public class NetParams {
     /** Peer provides network services */
     public static final long NODE_NETWORK = 1;
 
+    /** Peer supports GetUTXO (Bitcoin XT) */
+    public static final long NODE_GETUTXO = 2;
+
     /** Peer supports Bloom filters (Protocol version 70012 and later) */
     public static final long NODE_BLOOM = 4;
 
     /** Peer supports segregated witness (Protocol version 70014 and later) */
     public static final long NODE_WITNESS = 8;
+
+    /** Peer support thin block messages (Bitcoin Unlimited) */
+    public static final long NODE_XTHIN = 16;
 
     /** Our supported services */
     public static long SUPPORTED_SERVICES = 0;
@@ -159,7 +165,7 @@ public class NetParams {
         } else {
             MAGIC_NUMBER = MAGIC_NUMBER_PRODNET;
             ADDRESS_VERSION = ADDRESS_VERSION_PRODNET;
-            ADDRESS_VERSION = SCRIPT_ADDRESS_VERSION_PRODNET;
+            SCRIPT_ADDRESS_VERSION = SCRIPT_ADDRESS_VERSION_PRODNET;
             DUMPED_PRIVATE_KEY_VERSION = DUMPED_PRIVATE_KEY_VERSION_PRODNET;
             GENESIS_BLOCK_HASH = GENESIS_BLOCK_PRODNET;
             GENESIS_BLOCK_TIME = GENESIS_TIME_PRODNET;

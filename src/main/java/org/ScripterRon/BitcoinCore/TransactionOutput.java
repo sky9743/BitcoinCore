@@ -63,29 +63,7 @@ public class TransactionOutput implements ByteSerializable {
     public TransactionOutput(int txIndex, BigInteger value, Address address) {
         this.txIndex = txIndex;
         this.value = value;
-        if (address.getType() == Address.AddressType.P2PKH) {
-            //
-            // Create the output script for PAY_TO_PUBKEY_HASH
-            //   OP_DUP OP_HASH160 <pubkey-hash> OP_EQUALVERIFY OP_CHECKSIG
-            //
-            scriptBytes = new byte[1+1+1+20+1+1];
-            scriptBytes[0] = (byte)ScriptOpCodes.OP_DUP;
-            scriptBytes[1] = (byte)ScriptOpCodes.OP_HASH160;
-            scriptBytes[2] = (byte)20;
-            System.arraycopy(address.getHash(), 0, scriptBytes, 3, 20);
-            scriptBytes[23] = (byte)ScriptOpCodes.OP_EQUALVERIFY;
-            scriptBytes[24] = (byte)ScriptOpCodes.OP_CHECKSIG;
-        } else {
-            //
-            // Create the output script for PAY_TO_SCRIPT_HASH
-            //    OP_HASH160 <script-hash> OP_EQUAL
-            //
-            scriptBytes = new byte[1+1+20+1];
-            scriptBytes[0] = (byte)ScriptOpCodes.OP_HASH160;
-            scriptBytes[1] = (byte)20;
-            System.arraycopy(address.getHash(), 0, scriptBytes, 2, 20);
-            scriptBytes[22] = (byte)ScriptOpCodes.OP_EQUAL;
-        }
+        this.scriptBytes = Script.getScriptPubKey(address, false);
     }
 
     /**

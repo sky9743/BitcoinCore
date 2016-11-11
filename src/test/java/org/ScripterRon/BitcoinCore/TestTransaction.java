@@ -17,6 +17,7 @@ package org.ScripterRon.BitcoinCore;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
@@ -60,6 +61,14 @@ public class TestTransaction {
             txHash = new Sha256Hash(Utils.singleDigest(key.getPubKey()));
             inputs.add(new SignedInput(key, new OutPoint(txHash, 1), new BigInteger("200000000"), scriptBytes));
             //
+            // Check P2PKH address generation
+            //
+            String stringAddress = addr.toString();
+            assertEquals("P2PKH address version incorrect", "1", stringAddress.substring(0, 1));
+            Address checkAddress = new Address(stringAddress);
+            assertEquals("P2PKH address type incorrect", Address.AddressType.P2PKH, checkAddress.getType());
+            assertArrayEquals("P2PKH address hash incorrect", addr.getHash(), checkAddress.getHash());
+            //
             // Create the outputs
             //
             List<TransactionOutput> outputs = new ArrayList<>();
@@ -81,7 +90,7 @@ public class TestTransaction {
                 OutPoint outPoint = input.getOutPoint();
                 TransactionOutput output = new TransactionOutput(outPoint.getIndex(), input.getValue(), input.getScriptBytes());
                 assertTrue("Transaction signature validation failed",
-                        ScriptParser.process(txInputs.get(i), output, 400000));
+                        ScriptParser.process(txInputs.get(i), output, new Date().getTime()/1000));
             }
             //
             // All done

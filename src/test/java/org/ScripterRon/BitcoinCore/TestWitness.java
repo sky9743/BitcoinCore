@@ -17,6 +17,7 @@ package org.ScripterRon.BitcoinCore;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
@@ -47,23 +48,34 @@ public class TestWitness {
             List<SignedInput> inputs = new ArrayList<>();
             //
             // Input sequence number: -2
+            // Connected output txID: db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a5477 (wire format)
+            // Connected output index: 1
             // Connected output value: 10.00000000 BTC
             // Connected output script: OP_HASH160 <script-hash> OP_EQUAL
             // Public key: 03ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f7d6f93a2a26873 (wire format)
             // Private key: eb696a065ef48a2192da5b28b694f87544b30fae8327c4510137a922f32c6dcf (wire format)
-            // Script hash: db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a5477 (wire format)
             //
             byte[] scriptBytes = DatatypeConverter.parseHexBinary("a9144733f37cf4db86fbc2efed2500b4f4e49f31202387");
             BigInteger value = new BigInteger("1000000000");
             BigInteger privKey = new BigInteger("eb696a065ef48a2192da5b28b694f87544b30fae8327c4510137a922f32c6dcf", 16);
             byte[] pubKey = DatatypeConverter.parseHexBinary("03ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f7d6f93a2a26873");
             ECKey key = new ECKey(pubKey, privKey, true);
-            Sha256Hash hash = new Sha256Hash(
+            Sha256Hash txId = new Sha256Hash(
                     Utils.reverseBytes(DatatypeConverter.parseHexBinary(
                             "db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a5477")));
-            OutPoint outPoint = new OutPoint(hash, 1);
+            OutPoint outPoint = new OutPoint(txId, 1);
             SignedInput input = new SignedInput(key, outPoint, value, scriptBytes, -2);
             inputs.add(input);
+            //
+            // Check P2SH address generation
+            //
+            byte[] scriptHash = DatatypeConverter.parseHexBinary("4733f37cf4db86fbc2efed2500b4f4e49f312023");
+            Address addr = new Address(Address.AddressType.P2SH, scriptHash);
+            String stringAddress = addr.toString();
+            assertEquals("P2SH address version incorrect", "3", stringAddress.substring(0, 1));
+            Address checkAddress = new Address(stringAddress);
+            assertEquals("P2PKH address type incorrect", Address.AddressType.P2SH, checkAddress.getType());
+            assertArrayEquals("P2SH address hash incorrect", addr.getHash(), checkAddress.getHash());
             //
             // Create the outputs
             //
@@ -115,7 +127,7 @@ public class TestWitness {
                 outPoint = input.getOutPoint();
                 output = new TransactionOutput(outPoint.getIndex(), input.getValue(), input.getScriptBytes());
                 assertTrue("Transaction signature validation failed",
-                        ScriptParser.process(txInputs.get(i), output, 400000));
+                        ScriptParser.process(txInputs.get(i), output, new Date().getTime()/1000));
             }
             //
             // All done

@@ -137,7 +137,7 @@ public class Transaction implements ByteSerializable {
         segWit = false;
         //
         // Check if we are spending a witness output.  We support just P2PKH and
-        // P2SH-P2WPKH outputs.
+        // P2SH-P2WPKH output scripts.
         //
         // ScriptPubKey: OP_HASH160 <20-byte script hash> OP_EQUAL
         // Redeem script: OP_0 <20-byte pubkey hash>
@@ -295,13 +295,11 @@ public class Transaction implements ByteSerializable {
                 byte[] subScriptBytes = Script.getWitnessProgram(key.getPubKeyHash(), true);
                 serializeForSignature(i, ScriptOpCodes.SIGHASH_ALL, subScriptBytes, outBuffer);
                 byte[] contents = outBuffer.toByteArray();
-                //System.out.println("Serialized for signature: " + javax.xml.bind.DatatypeConverter.printHexBinary(contents));
                 //
                 // Create the DER-encoded signature
                 //
                 ECDSASignature sig = key.createSignature(contents);
                 byte[] encodedSig = sig.encodeToDER();
-                //System.out.println("Signature: " + javax.xml.bind.DatatypeConverter.printHexBinary(encodedSig));
                 //
                 // Create the witness data
                 //
@@ -367,7 +365,6 @@ public class Transaction implements ByteSerializable {
         //
         outBuffer.rewind();
         witnessTxData = getWitnessBytes(outBuffer).toByteArray();
-        //System.out.println("Witness TX data: " + javax.xml.bind.DatatypeConverter.printHexBinary(witnessTxData));
         //
         // Calculate the witness transaction hash
         //
@@ -800,7 +797,6 @@ public class Transaction implements ByteSerializable {
                     input.getOutPoint().getBytes(workBuffer);
                 }
                 hashPrevouts = Utils.doubleDigest(workBuffer.toByteArray());
-                //System.out.println("hashPrevouts: " + javax.xml.bind.DatatypeConverter.printHexBinary(hashPrevouts));
             }
             //
             // Hash the input sequence numbers
@@ -814,7 +810,6 @@ public class Transaction implements ByteSerializable {
                     workBuffer.putInt(input.getSeqNumber());
                 }
                 hashSequence = Utils.doubleDigest(workBuffer.toByteArray());
-                //System.out.println("hashSequence: " + javax.xml.bind.DatatypeConverter.printHexBinary(hashSequence));
             }
             //
             // Hash the outputs
@@ -834,7 +829,6 @@ public class Transaction implements ByteSerializable {
                     output.getBytes(workBuffer);
                 }
                 hashOutputs = Utils.doubleDigest(workBuffer.toByteArray());
-                //System.out.println("hashOutputs: " + javax.xml.bind.DatatypeConverter.printHexBinary(hashOutputs));
             }
             //
             // Serialize the transaction

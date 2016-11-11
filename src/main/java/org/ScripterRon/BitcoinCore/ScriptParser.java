@@ -42,12 +42,14 @@ public class ScriptParser {
      *
      * @param       txInput             Transaction input spending the coins
      * @param       txOutput            Transaction output providing the coins
-     * @param       chainHeight         Current block chain height
+     * @param       blockTimestamp      Block timestamp (cannot be before Jan 3, 2009 - 1230940800)
      * @return                          The script result
      * @throws      ScriptException     Unable to process the transaction script
      */
-    public static boolean process(TransactionInput txInput, TransactionOutput txOutput, int chainHeight)
+    public static boolean process(TransactionInput txInput, TransactionOutput txOutput, long blockTimestamp)
                                         throws ScriptException {
+        if (blockTimestamp < 1230940800L)
+            throw new IllegalArgumentException("Block timestamp is not valid");
         txInput.setValue(txOutput.getValue());
         Transaction tx = txInput.getTransaction();
         boolean txValid = true;
@@ -155,9 +157,9 @@ public class ScriptParser {
                     }
                 }
                 //
-                // Check if the next script is P2SH
+                // Check if the next script is P2SH (BIP0016 requires block timestamp >= 1333238400)
                 //
-                if (txValid && !scriptStack.isEmpty()) {
+                if (txValid && !scriptStack.isEmpty() && blockTimestamp >= 1333238400L) {
                     byte[] scriptBytes = scriptStack.get(0);
                     p2sh = (scriptBytes.length == 23 &&
                             scriptBytes[0] == (byte)ScriptOpCodes.OP_HASH160 &&
@@ -846,7 +848,7 @@ public class ScriptParser {
         byte[] encodedSig = new byte[sigBytes.length-1];
         System.arraycopy(sigBytes, 0, encodedSig, 0, encodedSig.length);
         //
-        // Serialize the transaction and then add the hash type to the end of the data
+        // Serialize the transaction
         //
         // The reference client has a bug for SIGHASH_SINGLE when the input index is
         // greater than or equal to the number of outputs.  In this case, it doesn't

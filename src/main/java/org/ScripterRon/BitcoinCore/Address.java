@@ -42,28 +42,26 @@ public class Address {
      * Creates a new Address with a zero hash
      */
     public Address() {
-        this (new byte[20]);
+        this (AddressType.P2PKH, new byte[20], "");
     }
 
     /**
-     * Creates a new Address using the 20-byte hash
+     * Creates a new P2PKH Address using the 20-byte hash
      *
      * @param       hash                    Hash
      */
     public Address(byte[] hash) {
-        this(hash, "");
+        this(AddressType.P2PKH, hash, "");
     }
 
     /**
-     * Creates a new Address using the 20-byte hash and a label
+     * Creates a new P2PKH Address using the 20-byte hash and a label
      *
      * @param       hash                    Hash
      * @param       label                   Address label
      */
     public Address(byte[] hash, String label) {
-        this.hash = hash;
-        this.label = label;
-        this.type = AddressType.P2PKH;
+        this(AddressType.P2PKH, hash, label);
     }
 
     /**
@@ -129,7 +127,7 @@ public class Address {
         if (decoded.length != 20+1)
             throw new AddressFormatException("Address length is not 20 bytes");
         //
-        // Get the sfftrdd hash
+        // Get the address hash
         //
         hash = Arrays.copyOfRange(decoded, 1, decoded.length);
     }
