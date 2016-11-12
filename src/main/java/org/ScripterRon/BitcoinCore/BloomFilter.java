@@ -1,6 +1,6 @@
 /**
  * Copyright 2012 Matt Corallo
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ public class BloomFilter implements ByteSerializable {
     private long nTweak = Double.valueOf(Math.random()*Long.MAX_VALUE).longValue();
 
     /** Filter update flags */
-    private int nFlags = UPDATE_P2PUBKEY_ONLY;
+    private int nFlags = UPDATE_NONE;
 
     /** Peer associated with this filter */
     private Peer peer;
