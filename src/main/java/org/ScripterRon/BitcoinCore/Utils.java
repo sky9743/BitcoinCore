@@ -116,7 +116,7 @@ public class Utils {
         byte[] bytes;
         synchronized(digest) {
             digest.reset();
-            inputList.stream().forEach((input) -> {
+            inputList.forEach((input) -> {
                 digest.update(input, 0, input.length);
             });
             bytes = digest.digest();
@@ -163,7 +163,7 @@ public class Utils {
         byte[] bytes;
         synchronized(digest) {
             digest.reset();
-            inputList.stream().forEach((input) -> {
+            inputList.forEach((input) -> {
                 digest.update(input, 0, input.length);
             });
             byte[] first = digest.digest();

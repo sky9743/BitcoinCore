@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Ronald W Hoffman
+ * Copyright 2014-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -248,6 +248,30 @@ public abstract class AbstractMessageListener implements MessageListener {
      */
     @Override
     public void processReject(Message msg, String cmd, int reasonCode, String description, Sha256Hash hash) {
+    }
+
+    /**
+     * Process the send compact notification
+     *
+     * <p>This method is called when a 'sendcmpct' message is received.</p>
+     *
+     * @param       msg             Message
+     * @param       enabled         TRUE if compact block support is enabled
+     * @param       version         Compact block version
+     */
+    @Override
+    public void processSendCompact(Message msg, boolean enabled, long version) {
+    }
+
+    /**
+     * Process the send headers notification
+     *
+     * <p>This method is called when a 'sendheaders' message is received.</p>
+     *
+     * @param       msg             Message
+     */
+    @Override
+    public void processSendHeaders(Message msg) {
     }
 
     /**

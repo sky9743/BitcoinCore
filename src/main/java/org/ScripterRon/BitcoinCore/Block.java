@@ -373,7 +373,7 @@ public class Block implements ByteSerializable {
         //  t1 t2 t3 t4 t5 t5
         //
         ArrayList<byte[]> tree = new ArrayList<>();
-        transactions.stream().forEach((tx) -> tree.add(tx.getHash().getBytes()));
+        transactions.forEach((tx) -> tree.add(tx.getHash().getBytes()));
         //
         // The tree is generated starting at the leaves and moving down to the root
         //

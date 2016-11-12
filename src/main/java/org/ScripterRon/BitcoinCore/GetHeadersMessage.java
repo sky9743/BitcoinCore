@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class GetHeadersMessage {
         SerializedBuffer msgBuffer = new SerializedBuffer(blockList.size()*32+40);
         msgBuffer.putInt(Math.min(peer.getVersion(), NetParams.PROTOCOL_VERSION))
                  .putVarInt(blockList.size());
-        blockList.stream().forEach((hash) -> msgBuffer.putBytes(Utils.reverseBytes(hash.getBytes())));
+        blockList.forEach((hash) -> msgBuffer.putBytes(Utils.reverseBytes(hash.getBytes())));
         msgBuffer.putBytes(Utils.reverseBytes(stopBlock.getBytes()));
         //
         // Build the message

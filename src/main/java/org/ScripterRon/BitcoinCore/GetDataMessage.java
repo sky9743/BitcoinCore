@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public class GetDataMessage {
     public static Message buildGetDataMessage(Peer peer, List<InventoryItem> invList) {
         SerializedBuffer msgBuffer = new SerializedBuffer(invList.size()*36+4);
         msgBuffer.putVarInt(invList.size());
-        invList.stream().forEach((item) -> item.getBytes(msgBuffer));
+        invList.forEach((item) -> item.getBytes(msgBuffer));
         //
         // Build the message
         //

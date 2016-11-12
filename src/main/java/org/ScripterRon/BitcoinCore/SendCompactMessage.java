@@ -39,16 +39,16 @@ public class SendCompactMessage {
      *
      * @param       peer            Destination peer
      * @param       enabled         TRUE to enable compact block support
-     * @param       version         Compact block support version
+     * @param       version         Compact block version
      * @return                      'sendcmpct' message
      */
-    public static Message buildSendCompactMessage(Peer peer, boolean enabled, int version) {
+    public static Message buildSendCompactMessage(Peer peer, boolean enabled, long version) {
          //
         // Build the message data
         //
         SerializedBuffer msgBuffer = new SerializedBuffer();
         msgBuffer.putBoolean(enabled);
-        msgBuffer.putInt(version);
+        msgBuffer.putLong(version);
         //
         // Build the message
         //
@@ -70,7 +70,7 @@ public class SendCompactMessage {
         // Get the message data
         //
         boolean enabled = inBuffer.getBoolean();
-        int version = inBuffer.getInt();
+        long version = inBuffer.getLong();
         //
         // Notify the message listener
         //

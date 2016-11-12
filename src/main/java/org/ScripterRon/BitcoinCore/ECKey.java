@@ -1,6 +1,6 @@
 /**
  * Copyright 2011 Google Inc.
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,6 +73,9 @@ public class ECKey {
     /** Public key hash */
     private byte[] pubKeyHash;
 
+    /** P2SH-P2WPKH script hash */
+    private byte[] scriptHash;
+
     /** Private key */
     private BigInteger privKey;
 
@@ -111,11 +114,11 @@ public class ECKey {
     public ECKey(byte[] pubKey) {
         this(pubKey, null, false);
     }
-    
+
     /**
      * Creates an ECKey public/private key pair using the supplied private key.  The
      * 'compressed' parameter determines the type of public key created.
-     * 
+     *
      * @param       privKey             Private key
      * @param       compressed          TRUE to create a compressed public key
      */
@@ -300,6 +303,19 @@ public class ECKey {
         if (pubKeyHash == null)
             pubKeyHash = Utils.sha256Hash160(pubKey);
         return pubKeyHash;
+    }
+
+    /**
+     * Return the P2SH-P2WPKH script hash as used in addresses.  The hash is 20 bytes.
+     *
+     * @return                          Script hash
+     */
+    public byte[] getScriptHash() {
+        if (scriptHash == null) {
+            byte[] redeemScript = Script.getRedeemScript(getPubKeyHash(), false);
+            scriptHash = Utils.sha256Hash160(redeemScript);
+        }
+        return scriptHash;
     }
 
     /**

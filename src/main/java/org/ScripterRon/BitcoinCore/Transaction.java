@@ -145,11 +145,9 @@ public class Transaction implements ByteSerializable {
         for (SignedInput input : inputs) {
             byte[] scriptBytes = input.getScriptBytes();
             if (Script.getPaymentType(scriptBytes) == ScriptOpCodes.PAY_TO_SCRIPT_HASH) {
-                byte[] checkHash = new byte[20];
-                System.arraycopy(scriptBytes, 2, checkHash, 0, 20);
-                byte[] redeemScript = Script.getRedeemScript(input.getKey().getPubKeyHash(), false);
-                byte[] hash = Utils.sha256Hash160(redeemScript);
-                if (!Arrays.equals(hash, checkHash)) {
+                byte[] checkHash = Arrays.copyOfRange(scriptBytes, 2, 22);
+                byte[] scriptHash = input.getKey().getScriptHash();
+                if (!Arrays.equals(scriptHash, checkHash)) {
                     throw new VerificationException("Unsupported P2SH connected output");
                 }
                 segWit = true;

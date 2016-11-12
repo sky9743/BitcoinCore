@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Ronald Hoffman.
+ * Copyright 2014-2016 Ronald Hoffman.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,15 @@ public class InventoryItem implements ByteSerializable {
 
     /** Filtered block inventory item */
     public static final int INV_FILTERED_BLOCK = 3;
+
+    /** Witness transaction inventory item (BIP 144) - GetData message only */
+    public static final int INV_WITNESS_TX = 0x40000001;
+
+    /** Witness block inventory item (BIP 144) - GetData message only */
+    public static final int INV_WITNESS_BLOCK = 0x40000002;
+
+    /** Witness filtered block inventory item (BIP 144) - GetData message only */
+    public static final int INV_WITNESS_FILTERED_BLOCK = 0x40000003;
 
     /** Item hash */
     private final Sha256Hash hash;
