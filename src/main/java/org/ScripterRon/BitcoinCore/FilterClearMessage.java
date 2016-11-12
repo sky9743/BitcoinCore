@@ -18,7 +18,7 @@ package org.ScripterRon.BitcoinCore;
 import java.nio.ByteBuffer;
 
 /**
- * The 'filterclear' message clear the bloom filter for the client.
+ * The 'filterclear' message clears the bloom filter for the client.
  *
  * The message consists of just the message header.
  */

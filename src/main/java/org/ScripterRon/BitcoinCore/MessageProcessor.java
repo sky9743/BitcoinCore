@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Ronald Hoffman.
+ * Copyright 2014-2016 Ronald Hoffman.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,6 +102,9 @@ public class MessageProcessor {
                 break;
             case REJECT:
                 RejectMessage.processRejectMessage(msg, inBuffer, msgListener);
+                break;
+            case SENDHEADERS:
+                SendHeadersMessage.processSendHeadersMessage(msg, inBuffer, msgListener);
                 break;
             case TX:
                 TransactionMessage.processTransactionMessage(msg, inBuffer, msgListener);

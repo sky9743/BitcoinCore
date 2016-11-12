@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       invList         Inventory item list
      */
-    public void sendInventory(Message msg, List<InventoryItem> invList);
+    default public void sendInventory(Message msg, List<InventoryItem> invList) {
+        // Default is to do nothing
+    }
 
     /**
      * Handle an inventory item available notification
@@ -43,7 +45,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       invList         Inventory item list
      */
-    public void requestInventory(Message msg, List<InventoryItem> invList);
+    default public void requestInventory(Message msg, List<InventoryItem> invList) {
+        // Default is to do nothing
+    }
 
     /**
      * Handle a request not found
@@ -56,7 +60,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       invList         Inventory item list
      */
-    public void requestNotFound(Message msg, List<InventoryItem> invList);
+    default public void requestNotFound(Message msg, List<InventoryItem> invList) {
+        // Default is to do nothing
+    }
 
     /**
      * Handle a request for the transaction memory pool
@@ -66,7 +72,9 @@ public interface MessageListener {
      *
      * @param       msg             Message
      */
-    public void requestMemoryPool(Message msg);
+    default public void requestMemoryPool(Message msg) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a peer address list
@@ -76,7 +84,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       addresses       Peer address list
      */
-    public void processAddresses(Message msg, List<PeerAddress> addresses);
+    default public void processAddresses(Message msg, List<PeerAddress> addresses) {
+        // Default is to do nothing
+    }
 
     /**
      * Process an alert
@@ -86,7 +96,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       alert           Alert
      */
-    public void processAlert(Message msg, Alert alert);
+    default public void processAlert(Message msg, Alert alert) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a block
@@ -96,7 +108,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       block           Block
      */
-    public void processBlock(Message msg, Block block);
+    default public void processBlock(Message msg, Block block) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a block header
@@ -106,7 +120,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       hdrList         Block header list
      */
-    public void processBlockHeaders(Message msg, List<BlockHeader> hdrList);
+    default public void processBlockHeaders(Message msg, List<BlockHeader> hdrList) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a Bloom filter clear request
@@ -117,7 +133,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       oldFilter       Previous bloom filter
      */
-    public void processFilterClear(Message msg, BloomFilter oldFilter);
+    default public void processFilterClear(Message msg, BloomFilter oldFilter) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a Bloom filter load request
@@ -129,7 +147,9 @@ public interface MessageListener {
      * @param       oldFilter       Previous bloom filter
      * @param       newFilter       New bloom filter
      */
-    public void processFilterLoad(Message msg, BloomFilter oldFilter, BloomFilter newFilter);
+    default public void processFilterLoad(Message msg, BloomFilter oldFilter, BloomFilter newFilter) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a get address request
@@ -139,7 +159,9 @@ public interface MessageListener {
      *
      * @param       msg             Message
      */
-    public void processGetAddress(Message msg);
+    default public void processGetAddress(Message msg) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a request for the latest blocks
@@ -153,7 +175,9 @@ public interface MessageListener {
      * @param       blockList       Locator block list
      * @param       stopBlock       Stop block (Sha256Hash.ZERO_HASH if all blocks should be sent)
      */
-    public void processGetBlocks(Message msg, int version, List<Sha256Hash> blockList, Sha256Hash stopBlock);
+    default public void processGetBlocks(Message msg, int version, List<Sha256Hash> blockList, Sha256Hash stopBlock) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a request for the latest headers
@@ -167,7 +191,9 @@ public interface MessageListener {
      * @param       blockList       Locator block list
      * @param       stopBlock       Stop block (Sha256Hash.ZERO_HASH if all blocks should be sent)
      */
-    public void processGetHeaders(Message msg, int version, List<Sha256Hash> blockList, Sha256Hash stopBlock);
+    default public void processGetHeaders(Message msg, int version, List<Sha256Hash> blockList, Sha256Hash stopBlock) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a Merkle block
@@ -177,7 +203,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       blkHeader       Merkle block header
      */
-    public void processMerkleBlock(Message msg, BlockHeader blkHeader);
+    default public void processMerkleBlock(Message msg, BlockHeader blkHeader) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a ping
@@ -189,7 +217,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       nonce           Nonce
      */
-    public void processPing(Message msg, long nonce);
+    default public void processPing(Message msg, long nonce) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a pong
@@ -199,7 +229,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       nonce           Nonce
      */
-    public void processPong(Message msg, long nonce);
+    default public void processPong(Message msg, long nonce) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a message rejection
@@ -212,7 +244,20 @@ public interface MessageListener {
      * @param       description     Description of the failure
      * @param       hash            Item hash or Sha256Hash.ZERO_HASH
      */
-    public void processReject(Message msg, String cmd, int reasonCode, String description, Sha256Hash hash);
+    default public void processReject(Message msg, String cmd, int reasonCode, String description, Sha256Hash hash) {
+        // Default is to do nothing
+    }
+
+    /**
+     * Process the send headers notification
+     *
+     * <p>This method is called when a 'sendheaders' message is received.</p>
+     *
+     * @param       msg             Message
+     */
+    default public void processSendHeaders(Message msg) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a transaction
@@ -222,7 +267,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       tx              Transaction
      */
-    public void processTransaction(Message msg, Transaction tx);
+    default public void processTransaction(Message msg, Transaction tx) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a version message
@@ -233,7 +280,9 @@ public interface MessageListener {
      * @param       msg             Message
      * @param       localAddress    Local address as seen by the peer
      */
-    public void processVersion(Message msg, PeerAddress localAddress);
+    default public void processVersion(Message msg, PeerAddress localAddress) {
+        // Default is to do nothing
+    }
 
     /**
      * Process a version acknowledgment
@@ -242,5 +291,7 @@ public interface MessageListener {
      *
      * @param       msg             Message
      */
-    public void processVersionAck(Message msg);
+    default public void processVersionAck(Message msg) {
+        // Default is to do nothing
+    }
 }

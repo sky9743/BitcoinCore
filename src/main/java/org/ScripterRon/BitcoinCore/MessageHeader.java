@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,8 @@ public class MessageHeader {
         REJECT,                     // 'reject' message
         TX,                         // 'tx' message
         VERACK,                     // 'verack' message
-        VERSION                     // 'version' message
+        VERSION,                    // 'version' message
+        SENDHEADERS                 // 'sendheaders' message
     }
 
     /** Message command map */
@@ -89,6 +90,7 @@ public class MessageHeader {
         cmdMap.put("ping", MessageCommand.PING);
         cmdMap.put("pong", MessageCommand.PONG);
         cmdMap.put("reject", MessageCommand.REJECT);
+        cmdMap.put("sendheaders", MessageCommand.SENDHEADERS);
         cmdMap.put("tx", MessageCommand.TX);
         cmdMap.put("verack", MessageCommand.VERACK);
         cmdMap.put("version", MessageCommand.VERSION);
