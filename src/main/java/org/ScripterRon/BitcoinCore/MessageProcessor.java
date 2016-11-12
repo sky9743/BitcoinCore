@@ -103,6 +103,9 @@ public class MessageProcessor {
             case REJECT:
                 RejectMessage.processRejectMessage(msg, inBuffer, msgListener);
                 break;
+            case SENDCMPCT:
+                SendCompactMessage.processSendCompactMessage(msg, inBuffer, msgListener);
+                break;
             case SENDHEADERS:
                 SendHeadersMessage.processSendHeadersMessage(msg, inBuffer, msgListener);
                 break;

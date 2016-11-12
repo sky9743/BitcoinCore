@@ -66,7 +66,8 @@ public class MessageHeader {
         TX,                         // 'tx' message
         VERACK,                     // 'verack' message
         VERSION,                    // 'version' message
-        SENDHEADERS                 // 'sendheaders' message
+        SENDHEADERS,                // 'sendheaders' message
+        SENDCMPCT                   // 'sendcmpct' message
     }
 
     /** Message command map */
@@ -90,6 +91,7 @@ public class MessageHeader {
         cmdMap.put("ping", MessageCommand.PING);
         cmdMap.put("pong", MessageCommand.PONG);
         cmdMap.put("reject", MessageCommand.REJECT);
+        cmdMap.put("sendcmpct", MessageCommand.SENDCMPCT);
         cmdMap.put("sendheaders", MessageCommand.SENDHEADERS);
         cmdMap.put("tx", MessageCommand.TX);
         cmdMap.put("verack", MessageCommand.VERACK);

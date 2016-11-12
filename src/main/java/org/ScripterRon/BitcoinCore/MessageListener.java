@@ -260,6 +260,19 @@ public interface MessageListener {
     }
 
     /**
+     * Process the send compact notification
+     *
+     * <p>This method is called when a 'sendcmpct' message is received.</p>
+     *
+     * @param       msg             Message
+     * @param       enabled         TRUE if compact block support is enabled
+     * @param       version         Compact block support version
+     */
+    default public void processSendCompact(Message msg, boolean enabled, int version) {
+        // Default is to do nothing
+    }
+
+    /**
      * Process a transaction
      *
      * <p>This method is called when a 'tx' message is received.</p>

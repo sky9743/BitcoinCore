@@ -4,6 +4,7 @@ BitcoinCore Change Log
 Version 3.0.0
   - SendHeaders message support (BIP 130)
   - Segregated Witness support (BIP 141, BIP 143, BIP 144)
+  - SendCompact message support (BIP 152)
 
 
 Version 2.1.2
