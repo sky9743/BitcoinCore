@@ -17,6 +17,8 @@
 package org.ScripterRon.BitcoinCore;
 
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
+import org.bouncycastle.crypto.macs.SipHash;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.math.BigInteger;
 import java.math.BigDecimal;
@@ -243,6 +245,38 @@ public class Utils {
             rDigest.doFinal(out, 0);
         }
         return out;
+    }
+
+    /**
+     * Calculate the SipHash 2-4 hash for use with Bitcoin
+     *
+     * @param       key0            First key part
+     * @param       key1            Second key part
+     * @param       input           The bytes to be hashed
+     * @return                      The hashed result
+     */
+    public static long sipHash(long key0, long key1, byte[] input) {
+        byte[] keyBytes = new byte[16];
+        uint64ToByteArrayLE(key0, keyBytes, 0);
+        uint64ToByteArrayLE(key1, keyBytes, 8);
+        return sipHash(keyBytes, input);
+    }
+
+    /**
+     * Calculate the SipHash-2-4 hash for use with Bitcoin
+     *
+     * @param       key             16-byte key
+     * @param       input           The bytes to be hashed
+     * @return                      The hashed result
+     */
+    public static long sipHash(byte[] key, byte[] input) {
+        if (key.length != 16)
+            throw new IllegalArgumentException("SipHash key is not 128 bytes");
+        SipHash sipHash = new SipHash(2, 4);
+        sipHash.init(new KeyParameter(key));
+        if (input != null && input.length != 0)
+            sipHash.update(input, 0, input.length);
+        return sipHash.doFinal();
     }
 
     /**
