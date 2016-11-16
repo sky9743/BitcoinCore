@@ -43,16 +43,18 @@ public class TestMessage implements MessageListener {
     public void testCompactBlock() {
         try {
             System.out.println("Start compact block tests");
+            List<SignedInput> inputs = new ArrayList<>();
+            List<TransactionOutput> outputs = new ArrayList<>();
+            Sha256Hash merkleRoot = new Sha256Hash("339abf46e6269217c3dcc20603fcc3cf739689e62629efa4a0cbbf724f97c67b");
             //
-            // Create the EC key
+            // Create the EC key used to sign the transactions
             //
             BigInteger privKey = new BigInteger("A64C47194715C1B3C20281E5DD24B9908C7E275B6021ED76C964792908A199FE", 16);
             ECKey key = new ECKey(privKey, true);
             Address addr = new Address(key.getPubKeyHash());
             //
-            // Create the signed inputs
+            // Create the inputs
             //
-            List<SignedInput> inputs = new ArrayList<>();
             byte[] scriptBytes = new byte[1+1+1+20+1+1];
             scriptBytes[0] = (byte)ScriptOpCodes.OP_DUP;
             scriptBytes[1] = (byte)ScriptOpCodes.OP_HASH160;
@@ -61,18 +63,29 @@ public class TestMessage implements MessageListener {
             scriptBytes[23] = (byte)ScriptOpCodes.OP_EQUALVERIFY;
             scriptBytes[24] = (byte)ScriptOpCodes.OP_CHECKSIG;
             Sha256Hash txHash = new Sha256Hash(Utils.singleDigest(privKey.toByteArray()));
-            inputs.add(new SignedInput(key, new OutPoint(txHash, 0), new BigInteger("800000000"), scriptBytes));
+            SignedInput input0 = new SignedInput(key, new OutPoint(txHash, 0), new BigInteger("700000000"), scriptBytes);
             txHash = new Sha256Hash(Utils.singleDigest(key.getPubKey()));
-            inputs.add(new SignedInput(key, new OutPoint(txHash, 1), new BigInteger("200000000"), scriptBytes));
+            SignedInput input1 = new SignedInput(key, new OutPoint(txHash, 1), new BigInteger("200000000"), scriptBytes);
+            SignedInput input2 = new SignedInput(key, new OutPoint(merkleRoot, 0), new BigInteger("100000000"), scriptBytes);
             //
             // Create the output
             //
-            List<TransactionOutput> outputs = new ArrayList<>();
-            outputs.add(new TransactionOutput(0, new BigInteger("999990000"), addr));
+            TransactionOutput output0 = new TransactionOutput(0, new BigInteger("999990000"), addr);
             //
-            // Create the test transaction with a transaction fee of 0.0001 BTC
+            // Create the test transactions with a transaction fee of 0.0001 BTC
             //
-            Transaction tx = new Transaction(inputs, outputs);
+            inputs.add(input0);
+            inputs.add(input1);
+            outputs.add(output0);
+            Transaction tx1 = new Transaction(inputs, outputs);
+            inputs.clear();
+            inputs.add(input1);
+            inputs.add(input0);
+            Transaction tx2 = new Transaction(inputs, outputs);
+            inputs.clear();
+            inputs.add(input0);
+            inputs.add(input2);
+            Transaction tx3 = new Transaction(inputs, outputs);
             //
             // Create the coinbase transaction
             //
@@ -85,24 +98,26 @@ public class TestMessage implements MessageListener {
             // Create the dummy block (a zero previous block hash indicates this is a unit test block)
             //
             Sha256Hash prevBlock = Sha256Hash.ZERO_HASH;
-            Sha256Hash merkleRoot = new Sha256Hash("339abf46e6269217c3dcc20603fcc3cf739689e62629efa4a0cbbf724f97c67b");
-            SerializedBuffer inBuffer = new SerializedBuffer(1024);
+            SerializedBuffer inBuffer = new SerializedBuffer(512);
             inBuffer.putInt(0x20000000)
                     .putBytes(prevBlock.getBytes())
                     .putBytes(merkleRoot.getBytes())
                     .putInt((int)(new Date().getTime()/1000))
                     .putUnsignedInt(486604799L)
                     .putUnsignedInt(9L)
-                    .putVarInt(2);
+                    .putVarInt(4);
             coinbase.getBytes(inBuffer);
-            tx.getBytes(inBuffer);
+            tx1.getBytes(inBuffer);
+            tx2.getBytes(inBuffer);
+            tx3.getBytes(inBuffer);
             inBuffer.rewind();
             block = new Block(inBuffer, false);
             //
             // Create the compact block message
             //
-            List<Integer> prefilled = new ArrayList<>(1);
+            List<Integer> prefilled = new ArrayList<>(2);
             prefilled.add(0);
+            prefilled.add(3);
             Message msg = CompactBlockMessage.buildCompactBlockMessage(null, block, prefilled);
             //
             // Process the compact block message
@@ -127,10 +142,14 @@ public class TestMessage implements MessageListener {
         //
         // Verify the prefilled transactions
         //
-        assertEquals("Prefilled transaction count incorrect", 1, prefilledTxs.size());
-        CompactBlockMessage.PrefilledTransaction ptx = prefilledTxs.get(0);
-        assertEquals("Prefilled transaction index incorrect", 0, ptx.getIndex());
-        assertEquals("Prefilled transaction identifier incorrect", txList.get(0).getHash(), ptx.getTransaction().getHash());
+        assertEquals("Prefilled transaction count incorrect", 2, prefilledTxs.size());
+        for (int i=0; i<2; i++) {
+            CompactBlockMessage.PrefilledTransaction ptx = prefilledTxs.get(i);
+            assertEquals("Prefilled transaction index incorrect",
+                    (i==1 ? 3 : 0), ptx.getIndex());
+            assertEquals("Prefilled transaction identifier incorrect",
+                    txList.get(ptx.getIndex()).getHash(), ptx.getTransaction().getHash());
+        }
         //
         // Build the short identifier key
         //
@@ -143,9 +162,11 @@ public class TestMessage implements MessageListener {
         //
         // Verify the short identifiers
         //
-        assertEquals("Short identifier count incorrect", 1, shortIds.size());
-        long chkId = Utils.sipHash(key, Utils.reverseBytes(txList.get(1).getHash().getBytes())) & 0xffffffffffffL;
-        assertEquals("Short identifier incorrect", chkId, (long)shortIds.get(0));
+        assertEquals("Short identifier count incorrect", 2, shortIds.size());
+        for (int i=0; i<2; i++) {
+            long chkId = Utils.sipHash(key, Utils.reverseBytes(txList.get(i+1).getHash().getBytes())) & 0xffffffffffffL;
+            assertEquals("Short identifier " + i + " incorrect", chkId, (long)shortIds.get(i));
+        }
         msgProcessed = true;
     }
 }

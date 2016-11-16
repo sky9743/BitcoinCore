@@ -44,6 +44,12 @@ public class BlockHeader implements ByteSerializable {
     /** The number that is one greater than the largest representable SHA-256 hash */
     public static final BigInteger LARGEST_HASH = BigInteger.ONE.shiftLeft(256);
 
+    /** Block version mask (BIP 9) */
+    public static final int VERSION_MASK = 0xe0000000;
+
+    /** BIP 9 version */
+    public static final int VERSION_BIP9 = 0x20000000;
+
     /** Block version */
     private final int version;
 

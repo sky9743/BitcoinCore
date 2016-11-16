@@ -5,6 +5,7 @@ Version 3.0.0
   - SendHeaders message support (BIP 130)
   - Segregated Witness support (BIP 141, BIP 143, BIP 144)
   - Compact block support (BIP 152)
+  - Block soft fork support (BIP 9)
   - Reduce bloom filter size by specifying UPDATE_NONE
 
 
