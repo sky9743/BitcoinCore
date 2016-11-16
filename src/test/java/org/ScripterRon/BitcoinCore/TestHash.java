@@ -16,11 +16,8 @@
 package org.ScripterRon.BitcoinCore;
 
 import java.util.Arrays;
-import javax.xml.bind.DatatypeConverter;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 /**

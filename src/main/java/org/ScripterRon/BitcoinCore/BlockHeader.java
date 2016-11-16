@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -159,7 +159,8 @@ public class BlockHeader implements ByteSerializable {
         // we can be fairly certain the work was done by the network.
         //
         // The block hash must be less than or equal to the target difficulty (the difficulty increases
-        // by requiring an increasing number of leading zeroes in the block hash)
+        // by requiring an increasing number of leading zeroes in the block hash).  We will skip
+        // this test if the previous block hash is zero (used by unit tests)
         //
         if (doVerify) {
             BigInteger target = Utils.decodeCompactBits(targetDifficulty);
@@ -167,7 +168,7 @@ public class BlockHeader implements ByteSerializable {
                 throw new VerificationException("Target difficulty is not valid",
                                                 RejectMessage.REJECT_INVALID, blockHash);
             BigInteger hash = blockHash.toBigInteger();
-            if (hash.compareTo(target) > 0)
+            if (hash.compareTo(target) > 0 && !prevHash.equals(Sha256Hash.ZERO_HASH))
                 throw new VerificationException("Block hash is higher than target difficulty",
                                                 RejectMessage.REJECT_INVALID, blockHash);
             //

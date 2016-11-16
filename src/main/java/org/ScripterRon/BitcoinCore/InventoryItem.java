@@ -39,20 +39,23 @@ public class InventoryItem implements ByteSerializable {
     /** Transaction inventory item */
     public static final int INV_TX = 1;
 
-    /** Block inventory item */
-    public static final int INV_BLOCK = 2;
-
-    /** Filtered block inventory item */
-    public static final int INV_FILTERED_BLOCK = 3;
-
     /** Witness transaction inventory item (BIP 144) - GetData message only */
     public static final int INV_WITNESS_TX = 0x40000001;
+
+    /** Block inventory item */
+    public static final int INV_BLOCK = 2;
 
     /** Witness block inventory item (BIP 144) - GetData message only */
     public static final int INV_WITNESS_BLOCK = 0x40000002;
 
+    /** Filtered block inventory item */
+    public static final int INV_FILTERED_BLOCK = 3;
+
     /** Witness filtered block inventory item (BIP 144) - GetData message only */
     public static final int INV_WITNESS_FILTERED_BLOCK = 0x40000003;
+
+    /** Compact block (BIP 152) - GetData message only */
+    public static final int INV_COMPACT_BLOCK = 4;
 
     /** Item hash */
     private final Sha256Hash hash;

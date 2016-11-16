@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
  * The 'sendcmpct' message is defined in BIP 152 and is activated for protocol
  * versions >= 70014.
  *
- * <p>Reject Message</p>
+ * <p>SendCompact Message</p>
  * <pre>
  *   Size       Field           Description
  *   ====       =====           ===========

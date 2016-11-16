@@ -43,7 +43,7 @@ public class MessageHeader {
         (byte)0x5d, (byte)0xf6, (byte)0xe0, (byte)0xe2
     };
 
-    /** Message commands */
+    /** Message commands (add new message types at the end to preserve ordinal values) */
     public enum MessageCommand {
         ADDR,                       // 'addr' message
         ALERT,                      // 'alert' message
@@ -67,7 +67,8 @@ public class MessageHeader {
         VERACK,                     // 'verack' message
         VERSION,                    // 'version' message
         SENDHEADERS,                // 'sendheaders' message
-        SENDCMPCT                   // 'sendcmpct' message
+        SENDCMPCT,                  // 'sendcmpct' message
+        CMPCTBLOCK                  // 'cmpctblock' message
     }
 
     /** Message command map */
@@ -76,6 +77,7 @@ public class MessageHeader {
         cmdMap.put("addr", MessageCommand.ADDR);
         cmdMap.put("alert", MessageCommand.ALERT);
         cmdMap.put("block", MessageCommand.BLOCK);
+        cmdMap.put("cmpctblock", MessageCommand.CMPCTBLOCK);
         cmdMap.put("filteradd", MessageCommand.FILTERADD);
         cmdMap.put("filterclear", MessageCommand.FILTERCLEAR);
         cmdMap.put("filterload", MessageCommand.FILTERLOAD);

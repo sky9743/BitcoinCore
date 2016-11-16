@@ -127,6 +127,22 @@ public abstract class AbstractMessageListener implements MessageListener {
     }
 
     /**
+     * Process a compact block
+     *
+     * <p>This method is called when a 'cmpctblock' message is received.</p>
+     *
+     * @param       msg             Message
+     * @param       header          Block header
+     * @param       nonce           Transaction nonce
+     * @param       shortIds        Short transaction identifiers
+     * @param       prefilledTxs    Prefilled transactions
+     */
+    @Override
+    public void processCompactBlock(Message msg, BlockHeader header, long nonce, List<Long> shortIds,
+                                    List<CompactBlockMessage.PrefilledTransaction> prefilledTxs) {
+    }
+
+    /**
      * Process a Bloom filter clear request
      *
      * <p>This method is called when a 'filterclear' message is received.  The peer

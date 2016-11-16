@@ -69,7 +69,7 @@ public class TestTransaction {
             assertEquals("P2PKH address type incorrect", Address.AddressType.P2PKH, checkAddress.getType());
             assertArrayEquals("P2PKH address hash incorrect", addr.getHash(), checkAddress.getHash());
             //
-            // Create the outputs
+            // Create the output
             //
             List<TransactionOutput> outputs = new ArrayList<>();
             outputs.add(new TransactionOutput(0, new BigInteger("999990000"), addr));

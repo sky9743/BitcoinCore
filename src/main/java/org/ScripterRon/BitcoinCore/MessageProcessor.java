@@ -58,6 +58,9 @@ public class MessageProcessor {
             case BLOCK:
                 BlockMessage.processBlockMessage(msg, inBuffer, msgListener);
                 break;
+            case CMPCTBLOCK:
+                CompactBlockMessage.processCompactBlockMessage(msg, inBuffer, msgListener);
+                break;
             case FILTERADD:
                 FilterAddMessage.processFilterAddMessage(msg, inBuffer, msgListener);
                 break;
