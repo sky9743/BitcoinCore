@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Ronald W Hoffman.
+ * Copyright 2014-2016 Ronald W Hoffman.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,9 @@ public class ScriptParser {
     /** Verbose debug flag */
     private static final boolean verboseDebug = false;
 
+    /** OP_CHECKLOCKTIMEVERIFY flag */
+    private static final int OP_CLTV_ENABLED = 1;
+
     /**
      * Processes a transaction script to determine if the spending transaction
      * is authorized to spend the output coins
@@ -50,6 +53,9 @@ public class ScriptParser {
                                         throws ScriptException {
         if (blockTimestamp < 1230940800L)
             throw new IllegalArgumentException("Block timestamp is not valid");
+        int scriptFlags = 0;
+        if (blockTimestamp > 1444795200L)
+            scriptFlags |= OP_CLTV_ENABLED;
         txInput.setValue(txOutput.getValue());
         Transaction tx = txInput.getTransaction();
         boolean txValid = true;
@@ -119,7 +125,7 @@ public class ScriptParser {
                 //
                 // Process the top script segment
                 //
-                txValid = processScript(txInput, scriptStack, elemStack, altStack, p2sh);
+                txValid = processScript(txInput, scriptStack, elemStack, altStack, p2sh, scriptFlags);
                 scriptStack.remove(0);
                 //
                 // Check for P2SH witness program (BIP0141)
@@ -190,13 +196,14 @@ public class ScriptParser {
      * @param       elemStack           Element stack
      * @param       altStack            Alternate stack
      * @param       p2sh                TRUE if this is a pay-to-script-hash
+     * @param       scriptFlags         Enabled script features
      * @return                          Script result
      * @throws      EOFException        End-of-data processing script
      * @throws      ScriptException     Unable to process script
      */
     private static boolean processScript(TransactionInput txInput, List<byte[]> scriptStack,
                                         List<StackElement> elemStack, List<StackElement> altStack,
-                                        boolean p2sh) throws EOFException, ScriptException {
+                                        boolean p2sh, int scriptFlags) throws EOFException, ScriptException {
         boolean txValid = true;
         boolean skipping;
         byte[] scriptBytes = scriptStack.get(0);
@@ -269,11 +276,18 @@ public class ScriptParser {
                 if (bytes[0] == 0)
                     bytes[0] = (byte)16;
                 elemStack.add(new StackElement(bytes));
-            } else if (opcode >= ScriptOpCodes.OP_NOP1 && opcode <= ScriptOpCodes.OP_NOP10) {
-                // Reserved for future expansion
             } else {
                 switch (opcode) {
                     case ScriptOpCodes.OP_NOP:
+                    case ScriptOpCodes.OP_NOP1:
+                    case ScriptOpCodes.OP_NOP3:
+                    case ScriptOpCodes.OP_NOP4:
+                    case ScriptOpCodes.OP_NOP5:
+                    case ScriptOpCodes.OP_NOP6:
+                    case ScriptOpCodes.OP_NOP7:
+                    case ScriptOpCodes.OP_NOP8:
+                    case ScriptOpCodes.OP_NOP9:
+                    case ScriptOpCodes.OP_NOP10:
                         // Do nothing
                         break;
                     case ScriptOpCodes.OP_RETURN:
@@ -626,6 +640,24 @@ public class ScriptParser {
                         if (ifStack.isEmpty() || ifStack.peek()) {
                             throw new ScriptException(String.format("Reserved script opcode %s (%d)",
                                                       ScriptOpCodes.getOpCodeName(opcode), opcode));
+                        }
+                        break;
+                    case ScriptOpCodes.OP_CHECKLOCKTIMEVERIFY:
+                        if ((scriptFlags&OP_CLTV_ENABLED) != 0) {
+                            if (elemStack.isEmpty()) {
+                                txValid = false;
+                            } else {
+                                BigInteger threshold = BigInteger.valueOf(Transaction.LOCKTIME_THRESHOLD);
+                                BigInteger txLockTime = BigInteger.valueOf(txInput.getTransaction().getLockTime());
+                                BigInteger lockTime = peekStack(elemStack).getBigInteger();
+                                int cmp1 = txLockTime.compareTo(threshold);
+                                int cmp2 = lockTime.compareTo(threshold);
+                                if (lockTime.signum() < 0 ||
+                                        !((cmp1 < 0 && cmp2 < 0) || (cmp1 >= 0 && cmp2 >= 0)) ||
+                                        lockTime.compareTo(txLockTime) > 0 || txInput.getSeqNumber() == -1) {
+                                    txValid = false;
+                                }
+                            }
                         }
                         break;
                     default:

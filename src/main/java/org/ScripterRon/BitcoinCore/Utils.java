@@ -397,6 +397,8 @@ public class Utils {
      * a 4 byte big-endian length field, followed by the stated number of bytes representing
      * the number in big-endian format (with a sign bit).
      *
+     * NOTE: The input byte array is modified for a negative value
+     *
      * @param       mpi             Encoded byte array
      * @param       hasLength       FALSE if the given array is missing the 4-byte length field
      * @return                      Decoded value

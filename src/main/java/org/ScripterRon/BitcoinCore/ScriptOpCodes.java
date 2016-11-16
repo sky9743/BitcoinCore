@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Google Inc.
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2016 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,7 +149,7 @@ public class ScriptOpCodes {
     public static final int OP_CHECKMULTISIGVERIFY = 0xaf;
     // Expansion
     public static final int OP_NOP1 = 0xb0;
-    public static final int OP_NOP2 = 0xb1;
+    public static final int OP_CHECKLOCKTIMEVERIFY = 0xb1;
     public static final int OP_NOP3 = 0xb2;
     public static final int OP_NOP4 = 0xb3;
     public static final int OP_NOP5 = 0xb4;
@@ -264,7 +264,7 @@ public class ScriptOpCodes {
         opCodeMap.put(OP_CHECKMULTISIG, "CHECKMULTISIG");
         opCodeMap.put(OP_CHECKMULTISIGVERIFY, "CHECKMULTISIGVERIFY");
         opCodeMap.put(OP_NOP1, "NOP1");
-        opCodeMap.put(OP_NOP2, "NOP2");
+        opCodeMap.put(OP_CHECKLOCKTIMEVERIFY, "CHECKLOCKTIMEVERIFY");
         opCodeMap.put(OP_NOP3, "NOP3");
         opCodeMap.put(OP_NOP4, "NOP4");
         opCodeMap.put(OP_NOP5, "NOP5");

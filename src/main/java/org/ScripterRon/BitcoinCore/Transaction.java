@@ -66,6 +66,9 @@ import java.util.List;
  */
 public class Transaction implements ByteSerializable {
 
+    /** Lock time threshold to differentiate between block height and block timestamp */
+    public static final long LOCKTIME_THRESHOLD = 500000000L;
+
     /** Serialized transaction data */
     private byte[] txData;
 
@@ -187,7 +190,7 @@ public class Transaction implements ByteSerializable {
         txInputs = new ArrayList<>(inputCount);
         txWitness = new ArrayList<>(inputCount);
         for (int i=0; i<inputCount; i++) {
-            txInputs.add(new TransactionInput(this, i, inputs.get(i).getOutPoint()));
+            txInputs.add(new TransactionInput(this, i, inputs.get(i).getOutPoint(), inputs.get(i).getSeqNumber()));
             txWitness.add(new TransactionWitness(this, i));
         }
         //
