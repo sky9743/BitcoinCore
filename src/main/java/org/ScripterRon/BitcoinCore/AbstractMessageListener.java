@@ -127,6 +127,19 @@ public abstract class AbstractMessageListener implements MessageListener {
     }
 
     /**
+     * Process block transactions
+     *
+     * <p>This method is called when a 'blocktxn' message is received.</p>
+     *
+     * @param       msg             Message
+     * @param       blockHash       Block identifier
+     * @param       txList          Transactions
+     */
+    @Override
+     public void processBlockTransactions(Message msg, Sha256Hash blockHash, List<Transaction> txList) {
+    }
+
+    /**
      * Process a compact block
      *
      * <p>This method is called when a 'cmpctblock' message is received.</p>
@@ -195,6 +208,21 @@ public abstract class AbstractMessageListener implements MessageListener {
      */
     @Override
     public void processGetBlocks(Message msg, int version, List<Sha256Hash> blockList, Sha256Hash stopBlock) {
+    }
+
+    /**
+     * Process a request for block transactions
+     *
+     * <p>This method is called when a 'getblocktxn' message is received.  The application
+     * should use the index list to get the requested transactions for the specified block
+     * and then send a 'blocktxn' message to the peer.</p>
+     *
+     * @param       msg             Message
+     * @param       blockHash       Block identifier
+     * @param       indexes         List of transaction indexes
+     */
+    @Override
+    public void processGetBlockTransactions(Message msg, Sha256Hash blockHash, List<Integer> indexes) {
     }
 
     /**

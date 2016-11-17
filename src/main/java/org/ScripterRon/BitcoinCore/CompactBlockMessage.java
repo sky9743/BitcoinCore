@@ -19,7 +19,6 @@ import java.io.EOFException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -47,6 +46,12 @@ import java.util.Random;
  *   VarInt     Index           Differential transaction index
  *   Variable   Tx              Transaction
  * </pre>
+ *
+ * <p>A differential transaction index is added to the next expected index
+ * to get the actual transaction index.  For example, if all block transactions
+ * are present in the list, each differential index would be 0.  If the second
+ * and third transactions are omitted from the list, then the second transaction
+ * in the list would have a differential index of 2.</p>
  */
 public class CompactBlockMessage {
 
@@ -56,23 +61,22 @@ public class CompactBlockMessage {
     /**
      * Build a 'cmpctblock' message
      *
+     * The coinbase transaction must be included in the prefilled transactions
+     * since the peer will not have this transaction.
+     *
      * @param       peer            Destination peer
      * @param       block           Block
-     * @param       prefilled       List of prefilled transaction indexes
+     * @param       prefilled       List of prefilled transaction indexes in ascending order
      * @return                      'cmpctblock' message
      */
     public static Message buildCompactBlockMessage(Peer peer, Block block, List<Integer> prefilled) {
+        if (prefilled.isEmpty() || prefilled.get(0) != 0)
+            throw new IllegalArgumentException("Coinbase transaction not included in prefilled list");
         long nonce = random.nextLong();
         byte[] headerBytes = block.getHeaderBytes();
         //
         // Build the list of prefilled transactions
         //
-        // We always send the coinbase transaction
-        //
-        List<Integer> sortedIndexes = new ArrayList<>(prefilled);
-        Collections.sort(sortedIndexes);
-        if (sortedIndexes.isEmpty() || sortedIndexes.get(0) != 0)
-            sortedIndexes.add(0, 0);
         List<Transaction> txs = block.getTransactions();
         List<PrefilledTransaction> prefilledTxs = new ArrayList<>();
         for (Integer index : prefilled) {

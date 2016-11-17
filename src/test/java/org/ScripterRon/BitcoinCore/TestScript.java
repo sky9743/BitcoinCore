@@ -17,7 +17,6 @@ package org.ScripterRon.BitcoinCore;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -87,7 +86,7 @@ public class TestScript {
         try {
             System.out.println("Start OP_CHECKSEQUENCEVERIFY tests");
             //
-            // Create a test transaction with lock time 400000 and input sequence 100 blocks
+            // Create a test transaction with lock time 400000 and input sequence 200 blocks
             //
             Transaction tx = createTransaction();
             assertEquals("Transaction version incorrect", 2, tx.getVersion());
@@ -103,18 +102,19 @@ public class TestScript {
             inScriptBytes[0] = (byte)1;
             inScriptBytes[1] = (byte)1;
             input.setScriptBytes(inScriptBytes);
-            byte[] outScriptBytes = new byte[4];
-            outScriptBytes[0] = (byte)1;
-            outScriptBytes[1] = (byte)150;
-            outScriptBytes[2] = (byte)ScriptOpCodes.OP_CHECKSEQUENCEVERIFY;
-            outScriptBytes[3] = (byte)ScriptOpCodes.OP_DROP;
+            byte[] outScriptBytes = new byte[5];
+            outScriptBytes[0] = (byte)2;
+            outScriptBytes[1] = (byte)250;
+            outScriptBytes[2] = (byte)0;
+            outScriptBytes[3] = (byte)ScriptOpCodes.OP_CHECKSEQUENCEVERIFY;
+            outScriptBytes[4] = (byte)ScriptOpCodes.OP_DROP;
             TransactionOutput output = new TransactionOutput(0, BigInteger.ZERO, outScriptBytes);
             boolean txValid = ScriptParser.process(input, output, blockTime);
             assertFalse("OP_CHECKSEQUENCEVERIFY did not fail", txValid);
             //
             // Test success: Required sequence 50 blocks
             //
-            outScriptBytes[1] = (byte)50;
+            outScriptBytes[1] = (byte)150;
             txValid = ScriptParser.process(input, output, blockTime);
             assertTrue("OP_CHECKSEQUENCEVERIFY did not succeed", txValid);
             System.out.println("OP_CHECKSEQUENCEVERIFY tests completed");
@@ -144,7 +144,7 @@ public class TestScript {
         //
         List<SignedInput> inputs = new ArrayList<>();
         SignedInput input = new SignedInput(key, new OutPoint(Sha256Hash.ZERO_HASH, 0),
-                new BigInteger("1000000000"), Script.getScriptPubKey(addr, false), 100);
+                new BigInteger("1000000000"), Script.getScriptPubKey(addr, false), 200);
         inputs.add(input);
         List<TransactionOutput> outputs = new ArrayList<>();
         TransactionOutput output = new TransactionOutput(0, new BigInteger("999990000"), addr);

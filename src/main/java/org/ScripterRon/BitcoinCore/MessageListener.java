@@ -125,6 +125,19 @@ public interface MessageListener {
     }
 
     /**
+     * Process block transactions
+     *
+     * <p>This method is called when a 'blocktxn' message is received.</p>
+     *
+     * @param       msg             Message
+     * @param       blockHash       Block identifier
+     * @param       txList          Transactions
+     */
+    default public void processBlockTransactions(Message msg, Sha256Hash blockHash, List<Transaction> txList) {
+        // Default is to do nothing
+    }
+
+    /**
      * Process a compact block
      *
      * <p>This method is called when a 'cmpctblock' message is received.</p>
@@ -192,6 +205,21 @@ public interface MessageListener {
      * @param       stopBlock       Stop block (Sha256Hash.ZERO_HASH if all blocks should be sent)
      */
     default public void processGetBlocks(Message msg, int version, List<Sha256Hash> blockList, Sha256Hash stopBlock) {
+        // Default is to do nothing
+    }
+
+    /**
+     * Process a request for block transactions
+     *
+     * <p>This method is called when a 'getblocktxn' message is received.  The application
+     * should use the index list to get the requested transactions for the specified block
+     * and then send a 'blocktxn' message to the peer.</p>
+     *
+     * @param       msg             Message
+     * @param       blockHash       Block identifier
+     * @param       indexes         List of transaction indexes
+     */
+    default public void processGetBlockTransactions(Message msg, Sha256Hash blockHash, List<Integer> indexes) {
         // Default is to do nothing
     }
 

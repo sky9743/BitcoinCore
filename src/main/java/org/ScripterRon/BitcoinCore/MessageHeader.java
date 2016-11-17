@@ -68,7 +68,9 @@ public class MessageHeader {
         VERSION,                    // 'version' message
         SENDHEADERS,                // 'sendheaders' message
         SENDCMPCT,                  // 'sendcmpct' message
-        CMPCTBLOCK                  // 'cmpctblock' message
+        CMPCTBLOCK,                 // 'cmpctblock' message
+        GETBLOCKTXN,                // 'getblocktxn' message
+        BLOCKTXN                    // 'blocktxn' message
     }
 
     /** Message command map */
@@ -77,12 +79,14 @@ public class MessageHeader {
         cmdMap.put("addr", MessageCommand.ADDR);
         cmdMap.put("alert", MessageCommand.ALERT);
         cmdMap.put("block", MessageCommand.BLOCK);
+        cmdMap.put("blocktxn", MessageCommand.BLOCKTXN);
         cmdMap.put("cmpctblock", MessageCommand.CMPCTBLOCK);
         cmdMap.put("filteradd", MessageCommand.FILTERADD);
         cmdMap.put("filterclear", MessageCommand.FILTERCLEAR);
         cmdMap.put("filterload", MessageCommand.FILTERLOAD);
         cmdMap.put("getaddr", MessageCommand.GETADDR);
         cmdMap.put("getblocks", MessageCommand.GETBLOCKS);
+        cmdMap.put("getblocktxn", MessageCommand.GETBLOCKTXN);
         cmdMap.put("getdata", MessageCommand.GETDATA);
         cmdMap.put("getheaders", MessageCommand.GETHEADERS);
         cmdMap.put("headers", MessageCommand.HEADERS);

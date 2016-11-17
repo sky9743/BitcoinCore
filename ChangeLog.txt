@@ -7,8 +7,9 @@ Version 3.0.0
   - Compact block support (BIP 152)
   - Block soft fork support (BIP 9)
   - Reduce bloom filter size by specifying UPDATE_NONE
+  - Soft fork consensus support (BIP 68)
   - OP_CHECKLOCKTIMEVERIFY support (BIP 65)
-  - OP_CHECKSEQUENCEVERIFY support (BIP 68 and BIP 112)
+  - OP_CHECKSEQUENCEVERIFY support (BIP 112)
 
 
 Version 2.1.2

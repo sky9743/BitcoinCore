@@ -58,6 +58,9 @@ public class MessageProcessor {
             case BLOCK:
                 BlockMessage.processBlockMessage(msg, inBuffer, msgListener);
                 break;
+            case BLOCKTXN:
+                BlockTransactionsMessage.processBlockTransactionsMessage(msg, inBuffer, msgListener);
+                break;
             case CMPCTBLOCK:
                 CompactBlockMessage.processCompactBlockMessage(msg, inBuffer, msgListener);
                 break;
@@ -75,6 +78,9 @@ public class MessageProcessor {
                 break;
             case GETBLOCKS:
                 GetBlocksMessage.processGetBlocksMessage(msg, inBuffer, msgListener);
+                break;
+            case GETBLOCKTXN:
+                GetBlockTransactionsMessage.processGetBlockTransactionsMessage(msg, inBuffer, msgListener);
                 break;
             case GETDATA:
                 GetDataMessage.processGetDataMessage(msg, inBuffer, msgListener);
