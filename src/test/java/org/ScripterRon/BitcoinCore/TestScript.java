@@ -80,6 +80,51 @@ public class TestScript {
     }
 
     /**
+     * Test OP_CHECKSEQUENCEVERIFY
+     */
+    @Test
+    public void testCSV() {
+        try {
+            System.out.println("Start OP_CHECKSEQUENCEVERIFY tests");
+            //
+            // Create a test transaction with lock time 400000 and input sequence 100 blocks
+            //
+            Transaction tx = createTransaction();
+            assertEquals("Transaction version incorrect", 2, tx.getVersion());
+            TransactionInput input = tx.getInputs().get(0);
+            long blockTime = new Date().getTime()/1000;
+            //
+            // Test failure: Required sequence 150 blocks
+            //
+            // Input script: <TRUE>
+            // Output script: <150> OP_CHECKSEQUENCEVERIFY OP_DROP
+            //
+            byte[] inScriptBytes = new byte[2];
+            inScriptBytes[0] = (byte)1;
+            inScriptBytes[1] = (byte)1;
+            input.setScriptBytes(inScriptBytes);
+            byte[] outScriptBytes = new byte[4];
+            outScriptBytes[0] = (byte)1;
+            outScriptBytes[1] = (byte)150;
+            outScriptBytes[2] = (byte)ScriptOpCodes.OP_CHECKSEQUENCEVERIFY;
+            outScriptBytes[3] = (byte)ScriptOpCodes.OP_DROP;
+            TransactionOutput output = new TransactionOutput(0, BigInteger.ZERO, outScriptBytes);
+            boolean txValid = ScriptParser.process(input, output, blockTime);
+            assertFalse("OP_CHECKSEQUENCEVERIFY did not fail", txValid);
+            //
+            // Test success: Required sequence 50 blocks
+            //
+            outScriptBytes[1] = (byte)50;
+            txValid = ScriptParser.process(input, output, blockTime);
+            assertTrue("OP_CHECKSEQUENCEVERIFY did not succeed", txValid);
+            System.out.println("OP_CHECKSEQUENCEVERIFY tests completed");
+        } catch (Exception exc) {
+            exc.printStackTrace(System.err);
+            throw new RuntimeException("Exception during OP_CHECKSEQUENCEVERIFY tests", exc);
+        }
+    }
+
+    /**
      * Create the test transaction
      *
      * @return                          Transaction

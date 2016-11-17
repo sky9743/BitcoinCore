@@ -58,6 +58,10 @@ import java.util.List;
  *   4 bytes        LockTime            Transaction lock time
  * </pre>
  *
+ * <p>The input sequence number is defined by BIP 68 for version 2 transactions.
+ * We will set the version number to 2 if any of the input sequence numbers do
+ * not have the disable flag set.</p>
+ *
  * <p>A segregated witness transaction is identified by the zero marker.  This results in
  * an input count of zero when processed as a normal transaction and will cause the transaction
  * to be rejected by nodes that do not support segregated witness transactions.</p>
@@ -190,8 +194,11 @@ public class Transaction implements ByteSerializable {
         txInputs = new ArrayList<>(inputCount);
         txWitness = new ArrayList<>(inputCount);
         for (int i=0; i<inputCount; i++) {
-            txInputs.add(new TransactionInput(this, i, inputs.get(i).getOutPoint(), inputs.get(i).getSeqNumber()));
+            int seqNumber = inputs.get(i).getSeqNumber();
+            txInputs.add(new TransactionInput(this, i, inputs.get(i).getOutPoint(), seqNumber));
             txWitness.add(new TransactionWitness(this, i));
+            if ((seqNumber&TransactionInput.SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0)
+                txVersion = 2;
         }
         //
         // Now sign each input and create the input scripts
@@ -274,8 +281,11 @@ public class Transaction implements ByteSerializable {
         //
         for (int i=0; i<inputCount; i++) {
             SignedInput input = inputs.get(i);
-            txInputs.add(new TransactionInput(this, i, input.getOutPoint(), input.getSeqNumber()));
+            int seqNumber = input.getSeqNumber();
+            txInputs.add(new TransactionInput(this, i, input.getOutPoint(), seqNumber));
             txWitness.add(new TransactionWitness(this, i));
+            if ((seqNumber&TransactionInput.SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0)
+                txVersion = 2;
         }
         //
         // Create and sign the input scripts

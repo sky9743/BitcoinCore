@@ -36,8 +36,11 @@ public class ScriptParser {
     /** Verbose debug flag */
     private static final boolean verboseDebug = false;
 
-    /** OP_CHECKLOCKTIMEVERIFY flag */
+    /** OP_CHECKLOCKTIMEVERIFY flag (BIP 65) */
     private static final int OP_CLTV_ENABLED = 1;
+
+    /** OP_CHECKSEQUENCEVERIFY flag (BIP 112) */
+    private static final int OP_CSV_ENABLED = 1;
 
     /**
      * Processes a transaction script to determine if the spending transaction
@@ -56,6 +59,8 @@ public class ScriptParser {
         int scriptFlags = 0;
         if (blockTimestamp > 1444795200L)
             scriptFlags |= OP_CLTV_ENABLED;
+        if (blockTimestamp > 1462060800L && !txInput.getTransaction().isCoinBase())
+            scriptFlags |= OP_CSV_ENABLED;
         txInput.setValue(txOutput.getValue());
         Transaction tx = txInput.getTransaction();
         boolean txValid = true;
@@ -66,7 +71,7 @@ public class ScriptParser {
         byte[] inputScriptBytes = txInput.getScriptBytes();
         byte[] outputScriptBytes = txOutput.getScriptBytes();
         //
-        // Check for a native witness program (BIP0141)
+        // Check for a native witness program (BIP 141)
         //
         // Version 0 is either P2WPKH or P2WSH as determined by the program length.
         // Non-zero versions are reserved for future use and are ignored.
@@ -128,7 +133,7 @@ public class ScriptParser {
                 txValid = processScript(txInput, scriptStack, elemStack, altStack, p2sh, scriptFlags);
                 scriptStack.remove(0);
                 //
-                // Check for P2SH witness program (BIP0141)
+                // Check for P2SH witness program (BIP 141)
                 //
                 if (witnessInput && txValid && p2sh && !scriptStack.isEmpty()) {
                     byte[] scriptBytes = scriptStack.get(0);
@@ -163,7 +168,7 @@ public class ScriptParser {
                     }
                 }
                 //
-                // Check if the next script is P2SH (BIP0016 requires block timestamp >= 1333238400)
+                // Check if the next script is P2SH (BIP 16 requires block timestamp >= 1333238400)
                 //
                 if (txValid && !scriptStack.isEmpty() && blockTimestamp >= 1333238400L) {
                     byte[] scriptBytes = scriptStack.get(0);
@@ -280,7 +285,6 @@ public class ScriptParser {
                 switch (opcode) {
                     case ScriptOpCodes.OP_NOP:
                     case ScriptOpCodes.OP_NOP1:
-                    case ScriptOpCodes.OP_NOP3:
                     case ScriptOpCodes.OP_NOP4:
                     case ScriptOpCodes.OP_NOP5:
                     case ScriptOpCodes.OP_NOP6:
@@ -656,6 +660,32 @@ public class ScriptParser {
                                         !((cmp1 < 0 && cmp2 < 0) || (cmp1 >= 0 && cmp2 >= 0)) ||
                                         lockTime.compareTo(txLockTime) > 0 || txInput.getSeqNumber() == -1) {
                                     txValid = false;
+                                }
+                            }
+                        }
+                        break;
+                    case ScriptOpCodes.OP_CHECKSEQUENCEVERIFY:
+                        if ((scriptFlags&OP_CSV_ENABLED) != 0) {
+                            if (elemStack.isEmpty()) {
+                                txValid = false;
+                            } else {
+                                BigInteger elemSequence = peekStack(elemStack).getBigInteger();
+                                if (elemSequence.signum() < 0) {
+                                    txValid = false;
+                                } else {
+                                    int txSequence = txInput.getSeqNumber();
+                                    int sequence = elemSequence.intValue();
+                                    int txType = txSequence&TransactionInput.SEQUENCE_LOCKTIME_TYPE_FLAG;
+                                    int type = sequence&TransactionInput.SEQUENCE_LOCKTIME_TYPE_FLAG;
+                                    if ((sequence&TransactionInput.SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0) {
+                                        if (txInput.getTransaction().getVersion() < 2 ||
+                                                (txSequence&TransactionInput.SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0 ||
+                                                type != txType ||
+                                                (sequence&TransactionInput.SEQUENCE_LOCKTIME_MASK) >
+                                                    (txSequence&TransactionInput.SEQUENCE_LOCKTIME_MASK)) {
+                                            txValid = false;
+                                        }
+                                    }
                                 }
                             }
                         }

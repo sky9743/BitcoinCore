@@ -150,7 +150,7 @@ public class ScriptOpCodes {
     // Expansion
     public static final int OP_NOP1 = 0xb0;
     public static final int OP_CHECKLOCKTIMEVERIFY = 0xb1;
-    public static final int OP_NOP3 = 0xb2;
+    public static final int OP_CHECKSEQUENCEVERIFY = 0xb2;
     public static final int OP_NOP4 = 0xb3;
     public static final int OP_NOP5 = 0xb4;
     public static final int OP_NOP6 = 0xb5;
@@ -265,7 +265,7 @@ public class ScriptOpCodes {
         opCodeMap.put(OP_CHECKMULTISIGVERIFY, "CHECKMULTISIGVERIFY");
         opCodeMap.put(OP_NOP1, "NOP1");
         opCodeMap.put(OP_CHECKLOCKTIMEVERIFY, "CHECKLOCKTIMEVERIFY");
-        opCodeMap.put(OP_NOP3, "NOP3");
+        opCodeMap.put(OP_CHECKSEQUENCEVERIFY, "CHECKSEQUENCEVERIFY");
         opCodeMap.put(OP_NOP4, "NOP4");
         opCodeMap.put(OP_NOP5, "NOP5");
         opCodeMap.put(OP_NOP6, "NOP6");

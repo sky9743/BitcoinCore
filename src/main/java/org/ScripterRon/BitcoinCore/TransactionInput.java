@@ -35,6 +35,15 @@ import java.math.BigInteger;
  */
 public class TransactionInput implements ByteSerializable {
 
+    /** Sequence lock time disable flag (BIP 68) */
+    public static final int SEQUENCE_LOCKTIME_DISABLE_FLAG = 0x80000000;
+
+    /** Sequence lock time type flag (BIP 68) */
+    public static final int SEQUENCE_LOCKTIME_TYPE_FLAG = 0x00400000;
+
+    /** Sequence lock time mask (BIP 68) */
+    public static final int SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
+
     /** The transaction output connected to this input */
     private final OutPoint outPoint;
 
