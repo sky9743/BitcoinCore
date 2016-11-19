@@ -10,6 +10,7 @@ Version 3.0.0
   - Soft fork consensus support (BIP 68)
   - OP_CHECKLOCKTIMEVERIFY support (BIP 65)
   - OP_CHECKSEQUENCEVERIFY support (BIP 112)
+  - Hierarchical Deterministic key support (BIP 32)
 
 
 Version 2.1.2

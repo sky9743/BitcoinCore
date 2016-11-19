@@ -17,7 +17,6 @@ package org.ScripterRon.BitcoinCore;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
@@ -127,7 +126,7 @@ public class TestWitness {
                 outPoint = input.getOutPoint();
                 output = new TransactionOutput(outPoint.getIndex(), input.getValue(), input.getScriptBytes());
                 assertTrue("Transaction signature validation failed",
-                        ScriptParser.process(txInputs.get(i), output, new Date().getTime()/1000));
+                        ScriptParser.process(txInputs.get(i), output, System.currentTimeMillis()/1000));
             }
             //
             // All done

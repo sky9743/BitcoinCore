@@ -91,6 +91,24 @@ public class NetParams {
     /** Dumped private key version */
     public static int DUMPED_PRIVATE_KEY_VERSION = DUMPED_PRIVATE_KEY_VERSION_PRODNET;
 
+    /** Production network HD private key prefix */
+    public static final int HD_PRIVATE_KEY_PREFIX_PRODNET = 0x0488ADE4;
+
+    /** Production network HD public key prefix */
+    public static final int HD_PUBLIC_KEY_PREFIX_PRODNET = 0x0488B21E;
+
+    /** Test network HD private key prefix */
+    public static final int HD_PRIVATE_KEY_PREFIX_TESTNET = 0x04358394;
+
+    /** Test network HD public key prefix */
+    public static final int HD_PUBLIC_KEY_PREFIX_TESTNET = 0x043587CF;
+
+    /** HD private key prefix */
+    public static int HD_PRIVATE_KEY_PREFIX = HD_PRIVATE_KEY_PREFIX_PRODNET;
+
+    /** HD public key prefix */
+    public static int HD_PUBLIC_KEY_PREFIX = HD_PUBLIC_KEY_PREFIX_PRODNET;
+
     /** Production network maximum target difficulty */
     public static final long MAX_DIFFICULTY_PRODNET = 0x1d00ffffL;
 
@@ -159,6 +177,8 @@ public class NetParams {
             ADDRESS_VERSION = ADDRESS_VERSION_TESTNET;
             SCRIPT_ADDRESS_VERSION = SCRIPT_ADDRESS_VERSION_TESTNET;
             DUMPED_PRIVATE_KEY_VERSION = DUMPED_PRIVATE_KEY_VERSION_TESTNET;
+            HD_PRIVATE_KEY_PREFIX = HD_PRIVATE_KEY_PREFIX_TESTNET;
+            HD_PUBLIC_KEY_PREFIX = HD_PUBLIC_KEY_PREFIX_TESTNET;
             GENESIS_BLOCK_HASH = GENESIS_BLOCK_TESTNET;
             GENESIS_BLOCK_TIME = GENESIS_TIME_TESTNET;
             MAX_TARGET_DIFFICULTY = MAX_DIFFICULTY_TESTNET;
@@ -167,6 +187,8 @@ public class NetParams {
             ADDRESS_VERSION = ADDRESS_VERSION_PRODNET;
             SCRIPT_ADDRESS_VERSION = SCRIPT_ADDRESS_VERSION_PRODNET;
             DUMPED_PRIVATE_KEY_VERSION = DUMPED_PRIVATE_KEY_VERSION_PRODNET;
+            HD_PRIVATE_KEY_PREFIX = HD_PRIVATE_KEY_PREFIX_PRODNET;
+            HD_PUBLIC_KEY_PREFIX = HD_PUBLIC_KEY_PREFIX_PRODNET;
             GENESIS_BLOCK_HASH = GENESIS_BLOCK_PRODNET;
             GENESIS_BLOCK_TIME = GENESIS_TIME_PRODNET;
             MAX_TARGET_DIFFICULTY = MAX_DIFFICULTY_PRODNET;

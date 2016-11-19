@@ -17,6 +17,8 @@
 package org.ScripterRon.BitcoinCore;
 
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
+import org.bouncycastle.crypto.digests.SHA512Digest;
+import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.macs.SipHash;
 import org.bouncycastle.crypto.params.KeyParameter;
 
@@ -277,6 +279,22 @@ public class Utils {
         if (input != null && input.length != 0)
             sipHash.update(input, 0, input.length);
         return sipHash.doFinal();
+    }
+
+    /**
+     * Calculate the HMAC-SHA512 digest for use with BIP 32
+     *
+     * @param       key             Key
+     * @param       input           Bytes to be hashed
+     * @return                      Hashed result
+     */
+    public static byte[] hmacSha512(byte[] key, byte[] input) {
+        HMac hmac = new HMac(new SHA512Digest());
+        hmac.init(new KeyParameter(key));
+        hmac.update(input, 0, input.length);
+        byte[] out = new byte[64];
+        hmac.doFinal(out, 0);
+        return out;
     }
 
     /**

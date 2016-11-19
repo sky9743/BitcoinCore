@@ -51,7 +51,7 @@ public class ECKey {
     public static final BigInteger HALF_CURVE_ORDER;
 
     /** Elliptic curve parameters (secp256k1 curve) */
-    private static final ECDomainParameters ecParams;
+    public static final ECDomainParameters ecParams;
     static {
         X9ECParameters params = CustomNamedCurves.getByName("secp256k1");
         ecParams = new ECDomainParameters(params.getCurve(), params.getG(), params.getN(), params.getH());
@@ -139,7 +139,7 @@ public class ECKey {
     public ECKey(byte[] pubKey, BigInteger privKey, boolean compressed) {
         this.privKey = privKey;
         if (pubKey != null) {
-            this.pubKey = pubKey;
+            this.pubKey = Arrays.copyOfRange(pubKey, 0, pubKey.length);
             isCompressed = (pubKey.length==33);
         } else if (privKey != null) {
             this.pubKey = pubKeyFromPrivKey(privKey, compressed);
@@ -334,6 +334,15 @@ public class ECKey {
      */
     public BigInteger getPrivKey() {
         return privKey;
+    }
+
+    /**
+     * Return the private key bytes
+     *
+     * @return                          Private key bytes or null if there is no private key
+     */
+    public byte[] getPrivKeyBytes() {
+        return (privKey!=null ? privKey.toByteArray() : null);
     }
 
     /**
@@ -682,8 +691,13 @@ public class ECKey {
      * @return                          Public key
      */
     private byte[] pubKeyFromPrivKey(BigInteger privKey, boolean compressed) {
-        ECPoint point = ecParams.getG().multiply(privKey);
-        return point.getEncoded(compressed);
+        BigInteger adjKey;
+        if (privKey.bitLength() > ecParams.getN().bitLength()) {
+            adjKey = privKey.mod(ecParams.getN());
+        } else {
+            adjKey = privKey;
+        }
+        return ecParams.getG().multiply(adjKey).getEncoded(compressed);
     }
 
     /**

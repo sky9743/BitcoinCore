@@ -17,7 +17,6 @@ package org.ScripterRon.BitcoinCore;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +41,7 @@ public class TestScript {
             //
             Transaction tx = createTransaction();
             TransactionInput input = tx.getInputs().get(0);
-            long blockTime = new Date().getTime()/1000;
+            long blockTime = System.currentTimeMillis()/1000;
             //
             // Test failure: Required lock time 500000, Transaction lock time 400000
             //
@@ -91,7 +90,7 @@ public class TestScript {
             Transaction tx = createTransaction();
             assertEquals("Transaction version incorrect", 2, tx.getVersion());
             TransactionInput input = tx.getInputs().get(0);
-            long blockTime = new Date().getTime()/1000;
+            long blockTime = System.currentTimeMillis()/1000;
             //
             // Test failure: Required sequence 150 blocks
             //

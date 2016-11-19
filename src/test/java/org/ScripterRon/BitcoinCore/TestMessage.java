@@ -19,7 +19,6 @@ import java.io.EOFException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -269,7 +268,7 @@ public class TestMessage implements MessageListener {
         inBuffer.putInt(0x20000000)
                 .putBytes(prevBlock.getBytes())
                 .putBytes(merkleRoot.getBytes())
-                .putInt((int)(new Date().getTime()/1000))
+                .putInt((int)(System.currentTimeMillis()/1000))
                 .putUnsignedInt(486604799L)
                 .putUnsignedInt(9L)
                 .putVarInt(4);
