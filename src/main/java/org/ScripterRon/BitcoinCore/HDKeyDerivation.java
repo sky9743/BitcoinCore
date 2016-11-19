@@ -15,6 +15,8 @@
  */
 package org.ScripterRon.BitcoinCore;
 
+import org.bouncycastle.math.ec.ECPoint;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -54,7 +56,16 @@ public class HDKeyDerivation {
     }
 
     /**
-     * Derive a child key from the specified parent.  The parent must have a private key.
+     * <p>Derive a child key from the specified parent.
+     *
+     * <p>The parent must have a private key in order to derive a private/public key pair.
+     * If the parent does not have a private key, only the public key can be derived.
+     * In addition, a hardened key cannot be derived from a public key since the algorithm requires
+     * the parent private key.
+     *
+     * <p>It is possible for key derivation to fail for a child number because the generated
+     * key is not valid.  If this happens, the application should generate a key using
+     * a different child number.
      *
      * @param   parent                  Parent key
      * @param   childNumber             Child number
@@ -64,11 +75,30 @@ public class HDKeyDerivation {
      */
     public static HDKey deriveChildKey(HDKey parent, int childNumber, boolean hardened)
                                         throws HDDerivationException {
+        HDKey derivedKey;
         if ((childNumber&HDKey.HARDENED_FLAG) != 0)
             throw new IllegalArgumentException("Hardened flag must not be set in child number");
-        BigInteger parentPrivKey = parent.getPrivKey();
-        if (parentPrivKey == null)
-            throw new IllegalArgumentException("Parent does not have a private key");
+        if (parent.getPrivKey() == null) {
+            if (hardened)
+                throw new IllegalStateException("Hardened key requires parent private key");
+            derivedKey = derivePublicKey(parent, childNumber);
+        } else {
+            derivedKey = derivePrivateKey(parent, childNumber, hardened);
+        }
+        return derivedKey;
+    }
+
+    /**
+     * Derive a child key from a private key
+     *
+     * @param   parent                  Parent key
+     * @param   childNumber             Child number
+     * @param   hardened                TRUE to create a hardened key
+     * @return                          Derived key
+     * @throws  HDDerivationException   Unable to derive key
+     */
+    private static HDKey derivePrivateKey(HDKey parent, int childNumber, boolean hardened)
+                                        throws HDDerivationException {
         byte[] parentPubKey = parent.getPubKey();
         if (parentPubKey.length != 33)
             throw new IllegalStateException("Parent public key is not 33 bytes");
@@ -82,7 +112,8 @@ public class HDKeyDerivation {
         // - The returned child key ki is parse256(IL) + kpar (mod n).
         // - The returned chain code ci is IR.
         //
-        // In case parse256(IL) ≥ n or ki = 0, the resulting key is invalid
+        // In case parse256(IL) ≥ n or ki = 0, the resulting key is invalid,
+        // and one should proceed with the next value for i.
         //
         ByteBuffer dataBuffer = ByteBuffer.allocate(37);
         if (hardened) {
@@ -98,9 +129,44 @@ public class HDKeyDerivation {
         BigInteger ilInt = new BigInteger(1, il);
         if (ilInt.compareTo(ECKey.ecParams.getN()) >= 0)
             throw new HDDerivationException("Derived private key is not less than N");
-        BigInteger ki = parentPrivKey.add(ilInt).mod(ECKey.ecParams.getN());
+        BigInteger ki = parent.getPrivKey().add(ilInt).mod(ECKey.ecParams.getN());
         if (ki.signum() == 0)
             throw new HDDerivationException("Derived private key is zero");
         return new HDKey(ki, ir, parent, childNumber, hardened);
     }
+
+    /**
+     * Derive a child key from a public key
+     *
+     * @param   parent                  Parent key
+     * @param   childNumber             Child number
+     * @return                          Derived key
+     * @throws  HDDerivationException   Unable to derive key
+     */
+    private static HDKey derivePublicKey(HDKey parent, int childNumber)
+                                        throws HDDerivationException {
+        //
+        // - If not (normal child): let I = HMAC-SHA512(Key = cpar, Data = serP(Kpar) || ser32(i)).
+        // - Split I into two 32-byte sequences, IL and IR.
+        // - The returned child key Ki is point(parse256(IL)) + Kpar.
+        // - The returned chain code ci is IR.
+        //
+        // In case parse256(IL) ≥ n or Ki is the point at infinity, the resulting key is invalid,
+        // and one should proceed with the next value for i.
+        //
+        ByteBuffer dataBuffer = ByteBuffer.allocate(37);
+        dataBuffer.put(parent.getPubKey()).putInt(childNumber);
+        byte[] i = Utils.hmacSha512(parent.getChainCode(), dataBuffer.array());
+        byte[] il = Arrays.copyOfRange(i, 0, 32);
+        byte[] ir = Arrays.copyOfRange(i, 32, 64);
+        BigInteger ilInt = new BigInteger(1, il);
+        if (ilInt.compareTo(ECKey.ecParams.getN()) >= 0)
+            throw new HDDerivationException("Derived private key is not less than N");
+        ECPoint pubKeyPoint = ECKey.ecParams.getCurve().decodePoint(parent.getPubKey());
+        ECPoint Ki = ECKey.pubKeyPointFromPrivKey(ilInt).add(pubKeyPoint);
+        if (Ki.equals(ECKey.ecParams.getCurve().getInfinity()))
+            throw new HDDerivationException("Derived public key equals infinity");
+        return new HDKey(Ki.getEncoded(true), ir, parent, childNumber);
+    }
+
 }

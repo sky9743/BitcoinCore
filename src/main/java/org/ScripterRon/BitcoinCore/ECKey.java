@@ -684,20 +684,30 @@ public class ECKey {
     }
 
     /**
-     * Create the public key from the private key
+     * Get the public key ECPoint from the private key
      *
      * @param       privKey             Private key
-     * @param       compressed          TRUE to generate a compressed public key
-     * @return                          Public key
+     * @return                          Public key ECPoint
      */
-    private byte[] pubKeyFromPrivKey(BigInteger privKey, boolean compressed) {
+    static ECPoint pubKeyPointFromPrivKey(BigInteger privKey) {
         BigInteger adjKey;
         if (privKey.bitLength() > ecParams.getN().bitLength()) {
             adjKey = privKey.mod(ecParams.getN());
         } else {
             adjKey = privKey;
         }
-        return ecParams.getG().multiply(adjKey).getEncoded(compressed);
+        return ecParams.getG().multiply(adjKey);
+    }
+
+    /**
+     * Create the public key from the private key
+     *
+     * @param       privKey             Private key
+     * @param       compressed          TRUE to generate a compressed public key
+     * @return                          Public key
+     */
+    static byte[] pubKeyFromPrivKey(BigInteger privKey, boolean compressed) {
+        return pubKeyPointFromPrivKey(privKey).getEncoded(compressed);
     }
 
     /**

@@ -181,6 +181,19 @@ public class TestKey {
             assertEquals("Path 4 incorrect", 1000000000, (int)path.get(4));
             assertEquals("String path incorrect", "m/0/1/2/2/1000000000", key.toString());
             //
+            // Create a public-key only chain (m/0h/1p)
+            //
+            HDKey chainPubKey = new HDKey(chainKey.getPubKey(), chainKey.getChainCode(), chainKey.getParent(), 1);
+            assertEquals("Public key m/0h/1p incorrect",
+                    chainKey.serializePubKeyToString(), chainPubKey.serializePubKeyToString());
+            //
+            // Create application key (m/0h/1p/0)
+            //
+            key = HDKeyDerivation.deriveChildKey(chainPubKey, 0, false);
+            assertEquals("Public key m/0h/1p/0 incorrect",
+                    "xpub6D4BDPcEgbv6qt4SWJPmbJ6aMV65EvtXTh9ZQkFhypze4kG5NYtpV9WeJroBCJXojh4PRfPV9KTyh7vDNCxGupcyJkc8WcJoSdj5b2gwsNv",
+                    key.serializePubKeyToString());
+            //
             // All done
             //
             System.out.println("HD key tests completed");

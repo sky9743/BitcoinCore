@@ -51,7 +51,7 @@ public class HDKey extends ECKey {
     private final int parentFingerprint;
 
     /**
-     * Create a new HD key
+     * Create a new HD key from a private key
      *
      * @param   privKey             Private key
      * @param   chainCode           Chain code
@@ -66,10 +66,33 @@ public class HDKey extends ECKey {
         if (chainCode.length != 32)
             throw new IllegalArgumentException("Chain code is not 32 bytes");
         if (getPubKey().length != 33)
-            throw new IllegalStateException("Public key is not 33 bytes");
+            throw new IllegalStateException("Public key is not compressed");
         this.chainCode = Arrays.copyOfRange(chainCode, 0, chainCode.length);
         this.parent = parent;
         this.isHardened = isHardened;
+        this.childNumber = childNumber;
+        this.depth = (parent!=null ? parent.getDepth() + 1 : 0);
+        this.parentFingerprint = (parent!=null ? parent.getFingerprint() : 0);
+    }
+
+    /**
+     * Create a new HD key from a public key.  The HD key will not have a private
+     * key.
+     *
+     * @param   pubKey              Public key
+     * @param   chainCode           Chain code
+     * @param   parent              Parent or null if root key
+     * @param   childNumber         Child number (first child is 0)
+     */
+    public HDKey(byte[] pubKey, byte[] chainCode, HDKey parent, int childNumber) {
+        super(pubKey);
+        if (pubKey.length != 33)
+            throw new IllegalArgumentException("Public key is not compressed");
+        if (chainCode.length != 32)
+            throw new IllegalArgumentException("Chain code is not 32 bytes");
+        this.chainCode = Arrays.copyOfRange(chainCode, 0, chainCode.length);
+        this.parent = parent;
+        this.isHardened = false;
         this.childNumber = childNumber;
         this.depth = (parent!=null ? parent.getDepth() + 1 : 0);
         this.parentFingerprint = (parent!=null ? parent.getFingerprint() : 0);
