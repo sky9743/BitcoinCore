@@ -181,9 +181,16 @@ public class TestKey {
             assertEquals("Path 4 incorrect", 1000000000, (int)path.get(4));
             assertEquals("String path incorrect", "m/0/1/2/2/1000000000", key.toString());
             //
+            // Check private key deserialization
+            //
+            String serString = key.serializePrivKeyToString();
+            key = HDKey.deserializeStringToKey(serString, key.getParent());
+            assertEquals("Deserialized private key incorrect",
+                    serString, key.serializePrivKeyToString());
+            //
             // Create a public-key only chain (m/0h/1p)
             //
-            HDKey chainPubKey = new HDKey(chainKey.getPubKey(), chainKey.getChainCode(), chainKey.getParent(), 1);
+            HDKey chainPubKey = new HDKey(chainKey.getPubKey(), chainKey.getChainCode(), chainKey.getParent(), 1, false);
             assertEquals("Public key m/0h/1p incorrect",
                     chainKey.serializePubKeyToString(), chainPubKey.serializePubKeyToString());
             //
@@ -193,6 +200,13 @@ public class TestKey {
             assertEquals("Public key m/0h/1p/0 incorrect",
                     "xpub6D4BDPcEgbv6qt4SWJPmbJ6aMV65EvtXTh9ZQkFhypze4kG5NYtpV9WeJroBCJXojh4PRfPV9KTyh7vDNCxGupcyJkc8WcJoSdj5b2gwsNv",
                     key.serializePubKeyToString());
+            //
+            // Check public key deserialization
+            //
+            serString = key.serializePubKeyToString();
+            key = HDKey.deserializeStringToKey(serString, key.getParent());
+            assertEquals("Deserialized public key incorrect",
+                    serString, key.serializePubKeyToString());
             //
             // All done
             //

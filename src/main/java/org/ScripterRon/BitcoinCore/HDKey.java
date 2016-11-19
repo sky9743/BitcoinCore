@@ -55,7 +55,7 @@ public class HDKey extends ECKey {
      *
      * @param   privKey             Private key
      * @param   chainCode           Chain code
-     * @param   parent              Parent or null if root key
+     * @param   parent              Parent or null if no parent
      * @param   childNumber         Child number (first child is 0)
      * @param   isHardened          TRUE if the child is hardened
      */
@@ -81,10 +81,11 @@ public class HDKey extends ECKey {
      *
      * @param   pubKey              Public key
      * @param   chainCode           Chain code
-     * @param   parent              Parent or null if root key
+     * @param   parent              Parent or null if no parent
      * @param   childNumber         Child number (first child is 0)
+     * @param   isHardened          TRUE if the child is hardened
      */
-    public HDKey(byte[] pubKey, byte[] chainCode, HDKey parent, int childNumber) {
+    public HDKey(byte[] pubKey, byte[] chainCode, HDKey parent, int childNumber, boolean isHardened) {
         super(pubKey);
         if (pubKey.length != 33)
             throw new IllegalArgumentException("Public key is not compressed");
@@ -92,7 +93,7 @@ public class HDKey extends ECKey {
             throw new IllegalArgumentException("Chain code is not 32 bytes");
         this.chainCode = Arrays.copyOfRange(chainCode, 0, chainCode.length);
         this.parent = parent;
-        this.isHardened = false;
+        this.isHardened = isHardened;
         this.childNumber = childNumber;
         this.depth = (parent!=null ? parent.getDepth() + 1 : 0);
         this.parentFingerprint = (parent!=null ? parent.getFingerprint() : 0);
@@ -203,6 +204,8 @@ public class HDKey extends ECKey {
      * @param   pubKey              TRUE to serialize the public key
      */
     private byte[] serializeKey(boolean pubKey) {
+        if (depth > 255)
+            throw new IllegalStateException("Key depth greater than 255");
         ByteBuffer serBuffer = ByteBuffer.allocate(78);
         serBuffer.putInt(pubKey ? NetParams.HD_PUBLIC_KEY_PREFIX : NetParams.HD_PRIVATE_KEY_PREFIX);
         serBuffer.put((byte)getDepth());
@@ -262,6 +265,56 @@ public class HDKey extends ECKey {
         byte[] checksum = Utils.doubleDigest(input);
         System.arraycopy(checksum, 0, checksummed, inputLength, 4);
         return checksummed;
+    }
+
+    /**
+     * Create an HD key from the serialized string
+     *
+     * @param   serString               Serialized string
+     * @param   parent                  Parent key or null if no parent
+     * @return                          HD key
+     * @throws  AddressFormatException  Invalid Base58-encoded string
+     * @throws  VerificationException   Data verification failed
+     */
+    public static HDKey deserializeStringToKey(String serString, HDKey parent)
+                                        throws AddressFormatException, VerificationException {
+        byte[] decodedBytes = Base58.decodeChecked(serString);
+        return deserializeToKey(decodedBytes, parent);
+    }
+
+    /**
+     * Create an HD key from the serialized data
+     *
+     * @param   serData                 Serialized data
+     * @param   parent                  Parent key or null if no parent
+     * @return                          HD key
+     * @throws  VerificationException   Data verification failed
+     */
+    public static HDKey deserializeToKey(byte[] serData, HDKey parent)
+                                        throws VerificationException {
+        ByteBuffer serBuffer = ByteBuffer.wrap(serData);
+        int prefix = serBuffer.getInt();
+        int depth = (int)serBuffer.get()&255;
+        int parentFingerprint = serBuffer.getInt();
+        int childNumber = serBuffer.getInt();
+        byte[] chainCode = new byte[32];
+        serBuffer.get(chainCode);
+        byte[] keyBytes = new byte[33];
+        serBuffer.get(keyBytes);
+        if (parent != null && parent.getFingerprint() != parentFingerprint)
+            throw new VerificationException("Parent fingerprint incorrect");
+        boolean hardened = (childNumber&HARDENED_FLAG) != 0;
+        childNumber &= ~HARDENED_FLAG;
+        HDKey key;
+        if (prefix == NetParams.HD_PUBLIC_KEY_PREFIX) {
+            key = new HDKey(keyBytes, chainCode, parent, childNumber, hardened);
+        } else if (prefix == NetParams.HD_PRIVATE_KEY_PREFIX) {
+            BigInteger privKey = new BigInteger(1, keyBytes);
+            key = new HDKey(privKey, chainCode, parent, childNumber, hardened);
+        } else {
+            throw new VerificationException("Serialized data not for an HD key");
+        }
+        return key;
     }
 
     /**

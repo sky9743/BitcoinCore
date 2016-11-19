@@ -166,7 +166,7 @@ public class HDKeyDerivation {
         ECPoint Ki = ECKey.pubKeyPointFromPrivKey(ilInt).add(pubKeyPoint);
         if (Ki.equals(ECKey.ecParams.getCurve().getInfinity()))
             throw new HDDerivationException("Derived public key equals infinity");
-        return new HDKey(Ki.getEncoded(true), ir, parent, childNumber);
+        return new HDKey(Ki.getEncoded(true), ir, parent, childNumber, false);
     }
 
 }
