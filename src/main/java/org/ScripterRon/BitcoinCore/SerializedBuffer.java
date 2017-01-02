@@ -31,7 +31,7 @@ public class SerializedBuffer {
 
 
     /** UTF-8 character set */
-    private final Charset utf8Charset = Charset.forName("UTF-8");
+    private static final Charset utf8Charset = Charset.forName("UTF-8");
 
     /** Default buffer size */
     private static final int defaultSize = 256;
