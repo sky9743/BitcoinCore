@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 Ronald W Hoffman
+ * Copyright 2013-2017 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.ScripterRon.BitcoinCore;
 
 import org.bouncycastle.crypto.BufferedBlockCipher;
-import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -71,7 +71,7 @@ public class EncryptedPrivateKey implements ByteSerializable {
             iv = new byte[BLOCK_LENGTH];
             secureRandom.nextBytes(iv);
             ParametersWithIV keyWithIV = new ParametersWithIV(aesKey, iv);
-            CBCBlockCipher blockCipher = new CBCBlockCipher(new AESFastEngine());
+            CBCBlockCipher blockCipher = new CBCBlockCipher(new AESEngine());
             BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(blockCipher);
             cipher.init(true, keyWithIV);
             byte[] privKeyBytes = privKey.toByteArray();
@@ -148,7 +148,7 @@ public class EncryptedPrivateKey implements ByteSerializable {
         BigInteger privKey;
         try {
             ParametersWithIV keyWithIV = new ParametersWithIV(aesKey, iv);
-            CBCBlockCipher blockCipher = new CBCBlockCipher(new AESFastEngine());
+            CBCBlockCipher blockCipher = new CBCBlockCipher(new AESEngine());
             BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(blockCipher);
             cipher.init(false, keyWithIV);
             int bufferLength = cipher.getOutputSize(encKeyBytes.length);
