@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Ronald Hoffman.
+ * Copyright 2014-2017 Ronald W Hoffman.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,9 @@ public class MessageProcessor {
                 break;
             case CMPCTBLOCK:
                 CompactBlockMessage.processCompactBlockMessage(msg, inBuffer, msgListener);
+                break;
+            case FEEFILTER:
+                FeeFilterMessage.processFeeFilterMessage(msg, inBuffer, msgListener);
                 break;
             case FILTERADD:
                 FilterAddMessage.processFilterAddMessage(msg, inBuffer, msgListener);

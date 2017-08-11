@@ -24,17 +24,17 @@
         </license>
     </licenses>
 	<developers>
-		<developer>
-			<id>ScripterRon</id>
-			<name>Ronald Hoffman</name>
-			<email>Ronald.Hoffman6@gmail.com</email>
-		</developer>
+            <developer>
+		<id>ScripterRon</id>
+		<name>Ronald Hoffman</name>
+		<email>Ronald.Hoffman6@gmail.com</email>
+            </developer>
 	</developers>
 	<scm>
-		<connection>scm:git:https://github.com:ScripterRon/BitcoinCore.git</connection>
-		<developerConnection>scm:git:https://github.com:ScripterRon/BitcoinCore.git</developerConnection>
-		<url>https://github.com/ScripterRon/BitcoinCore</url>
-		<tag>HEAD</tag>
+            <connection>scm:git:https://github.com:ScripterRon/BitcoinCore.git</connection>
+            <developerConnection>scm:git:https://github.com:ScripterRon/BitcoinCore.git</developerConnection>
+            <url>https://github.com/ScripterRon/BitcoinCore</url>
+            <tag>HEAD</tag>
 	</scm>
     <build>
         <!-- Filter resources -->

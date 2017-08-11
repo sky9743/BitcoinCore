@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2016 Ronald W Hoffman
+ * Copyright 2013-2017 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,8 @@ public class MessageHeader {
         SENDCMPCT,                  // 'sendcmpct' message
         CMPCTBLOCK,                 // 'cmpctblock' message
         GETBLOCKTXN,                // 'getblocktxn' message
-        BLOCKTXN                    // 'blocktxn' message
+        BLOCKTXN,                   // 'blocktxn' message
+        FEEFILTER                   // 'feefilter' message
     }
 
     /** Message command map */
@@ -81,6 +82,7 @@ public class MessageHeader {
         cmdMap.put("block", MessageCommand.BLOCK);
         cmdMap.put("blocktxn", MessageCommand.BLOCKTXN);
         cmdMap.put("cmpctblock", MessageCommand.CMPCTBLOCK);
+        cmdMap.put("feefilter", MessageCommand.FEEFILTER);
         cmdMap.put("filteradd", MessageCommand.FILTERADD);
         cmdMap.put("filterclear", MessageCommand.FILTERCLEAR);
         cmdMap.put("filterload", MessageCommand.FILTERLOAD);

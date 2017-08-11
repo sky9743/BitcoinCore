@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2016 Ronald W Hoffman
+ * Copyright 2013-2017 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -150,6 +150,18 @@ public interface MessageListener {
      */
     default public void processCompactBlock(Message msg, BlockHeader header, long nonce, List<Long> shortIds,
                                     List<CompactBlockMessage.PrefilledTransaction> prefilledTxs) {
+        // Default is to do nothing
+    }
+    
+    /**
+     * Process a fee filter message
+     * 
+     * <p>This method is called when a 'feefilter' message is received.</p>
+     * 
+     * @param       msg             Message
+     * @param       fee             Minimum fee (satoshis/byte)
+     */
+    default public void processFeeFilter(Message msg, long fee) {
         // Default is to do nothing
     }
 
