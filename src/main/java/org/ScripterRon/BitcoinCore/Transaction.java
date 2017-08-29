@@ -80,7 +80,7 @@ public class Transaction implements ByteSerializable {
     private byte[] witnessTxData;
 
     /** Transaction version */
-    private int txVersion;
+    private int txVersion = 2;
 
     /** Transaction hash */
     private Sha256Hash txHash;
@@ -141,7 +141,7 @@ public class Transaction implements ByteSerializable {
      */
     public Transaction(List<SignedInput> inputs, List<TransactionOutput> outputs, long lockTime)
                                             throws ECException, ScriptException, VerificationException {
-        this(inputs, outputs, lockTime, ScriptOpCodes.SIGHASH_ALL);
+        this(inputs, outputs, lockTime, ScriptOpCodes.SIGHASH_ALL, 0);
     }
     
     /**
@@ -154,11 +154,12 @@ public class Transaction implements ByteSerializable {
      * @param       outputs                 List of outputs
      * @param       lockTime                Transaction lock time
      * @param       sigHash                 Signature hash type
+     * @param       forkId                  Block chain fork identifier
      * @throws      ECException             Unable to sign transaction
      * @throws      ScriptException         Script processing error
      * @throws      VerificationException   Transaction verification failure
      */
-    public Transaction(List<SignedInput> inputs, List<TransactionOutput> outputs, long lockTime, int sigHash)
+    public Transaction(List<SignedInput> inputs, List<TransactionOutput> outputs, long lockTime, int sigHash, int forkId)
                                             throws ECException, ScriptException, VerificationException {
         segWit = false;
         //
@@ -182,9 +183,9 @@ public class Transaction implements ByteSerializable {
         // Create the transaction
         //
         if (segWit) {
-            createWitnessTransaction(inputs, outputs, lockTime, sigHash);
+            createWitnessTransaction(inputs, outputs, lockTime, sigHash, forkId);
         } else {
-            createTransaction(inputs, outputs, lockTime, sigHash);
+            createTransaction(inputs, outputs, lockTime, sigHash, forkId);
         }
     }
 
@@ -195,14 +196,14 @@ public class Transaction implements ByteSerializable {
      * @param       outputs                 List of outputs
      * @param       lockTime                Transaction lock time
      * @param       sigHash                 Signature hash type
+     * @param       forkId                  Block chain fork identifier
      * @throws      ECException             Unable to sign transaction
      * @throws      ScriptException         Script processing error
      * @throws      VerificationException   Transaction verification failure
      */
-    private void createTransaction(List<SignedInput> inputs, List<TransactionOutput> outputs, long lockTime, int sigHash)
-                                            throws ECException, ScriptException, VerificationException {
+    private void createTransaction(List<SignedInput> inputs, List<TransactionOutput> outputs, long lockTime, 
+                    int sigHash, int forkId) throws ECException, ScriptException, VerificationException {
         SerializedBuffer outBuffer = new SerializedBuffer(1024);
-        txVersion = 1;
         txOutputs = outputs;
         txLockTime = lockTime;
         coinBase = false;
@@ -216,8 +217,6 @@ public class Transaction implements ByteSerializable {
             int seqNumber = inputs.get(i).getSeqNumber();
             txInputs.add(new TransactionInput(this, i, inputs.get(i).getOutPoint(), seqNumber));
             txWitness.add(new TransactionWitness(this, i));
-            if ((seqNumber&TransactionInput.SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0)
-                txVersion = 2;
         }
         //
         // Now sign each input and create the input scripts
@@ -225,13 +224,13 @@ public class Transaction implements ByteSerializable {
         for (int i=0; i<inputs.size(); i++) {
             SignedInput input = inputs.get(i);
             ECKey key = input.getKey();
-            byte[] contents;
+            txInputs.get(i).setValue(input.getValue());
             //
             // Serialize the transaction for signing
             //
             outBuffer.rewind();
-            serializeForSignature(i, sigHash, input.getScriptBytes(), outBuffer);
-            contents = outBuffer.toByteArray();
+            serializeForSignature(i, sigHash, forkId, input.getScriptBytes(), outBuffer);
+            byte[] contents = outBuffer.toByteArray();
             //
             // Create the DER-encoded signature
             //
@@ -242,7 +241,7 @@ public class Transaction implements ByteSerializable {
             //   <sig> <pubKey>
             //
             byte[] pubKey = key.getPubKey();
-            byte[] scriptBytes = new byte[1+encodedSig.length+1+1+pubKey.length];
+            byte[] scriptBytes = new byte[1 + encodedSig.length + 1 + 1 + pubKey.length];
             scriptBytes[0] = (byte)(encodedSig.length+1);
             System.arraycopy(encodedSig, 0, scriptBytes, 1, encodedSig.length);
             int offset = encodedSig.length+1;
@@ -281,15 +280,15 @@ public class Transaction implements ByteSerializable {
      * @param       outputs                 List of outputs
      * @param       lockTime                Transaction lock time
      * @param       sigHash                 Signature hash type
+     * @param       forkId                  Block chain fork identifier
      * @throws      ECException             Unable to sign transaction
      * @throws      ScriptException         Script processing error
      * @throws      VerificationException   Transaction verification failure
 
      */
-    private void createWitnessTransaction(List<SignedInput> inputs, List<TransactionOutput> outputs, long lockTime, int sigHash)
-                                            throws ECException, ScriptException, VerificationException {
+    private void createWitnessTransaction(List<SignedInput> inputs, List<TransactionOutput> outputs, long lockTime, 
+                    int sigHash, int forkId) throws ECException, ScriptException, VerificationException {
         SerializedBuffer outBuffer = new SerializedBuffer(1024);
-        txVersion = 1;
         txOutputs = outputs;
         txLockTime = lockTime;
         coinBase = false;
@@ -304,8 +303,6 @@ public class Transaction implements ByteSerializable {
             int seqNumber = input.getSeqNumber();
             txInputs.add(new TransactionInput(this, i, input.getOutPoint(), seqNumber));
             txWitness.add(new TransactionWitness(this, i));
-            if ((seqNumber&TransactionInput.SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0)
-                txVersion = 2;
         }
         //
         // Create and sign the input scripts
@@ -324,7 +321,7 @@ public class Transaction implements ByteSerializable {
                 // Serialize the transaction
                 //
                 byte[] subScriptBytes = Script.getWitnessProgram(key.getPubKeyHash(), true);
-                serializeForSignature(i, sigHash, subScriptBytes, outBuffer);
+                serializeForSignature(i, sigHash, forkId, subScriptBytes, outBuffer);
                 byte[] contents = outBuffer.toByteArray();
                 //
                 // Create the DER-encoded signature
@@ -354,7 +351,7 @@ public class Transaction implements ByteSerializable {
                 //
                 // Serialize the transaction
                 //
-                serializeForSignature(i, sigHash, input.getScriptBytes(), outBuffer);
+                serializeForSignature(i, sigHash, forkId, input.getScriptBytes(), outBuffer);
                 byte[] contents = outBuffer.toByteArray();
                 //
                 // Create the DER-encoded signature
@@ -365,7 +362,7 @@ public class Transaction implements ByteSerializable {
                 // Create the input script
                 //   <sig> <pubKey>
                 //
-                byte[] scriptBytes = new byte[1+encodedSig.length+1+1+pubKey.length];
+                byte[] scriptBytes = new byte[1 + encodedSig.length + 1 + 1 + pubKey.length];
                 scriptBytes[0] = (byte)(encodedSig.length+1);
                 System.arraycopy(encodedSig, 0, scriptBytes, 1, encodedSig.length);
                 int offset = encodedSig.length+1;
@@ -764,7 +761,7 @@ public class Transaction implements ByteSerializable {
                                             RejectMessage.REJECT_MALFORMED, txHash);
         }
     }
-
+    
     /**
      * Serializes the transaction for use in a signature
      *
@@ -776,8 +773,21 @@ public class Transaction implements ByteSerializable {
      */
     public final void serializeForSignature(int index, int sigHashType, byte[] subScriptBytes,
                                             SerializedBuffer outBuffer) throws ScriptException {
-        int hashType;
-        boolean anyoneCanPay;
+        serializeForSignature(index, sigHashType, 0, subScriptBytes, outBuffer);
+    }
+
+    /**
+     * Serializes the transaction for use in a signature
+     *
+     * @param       index                   Current transaction index
+     * @param       sigHashType             Signature hash type
+     * @param       forkId                  Block chain fork identifier
+     * @param       subScriptBytes          Replacement script for the current input
+     * @param       outBuffer               Output buffer
+     * @throws      ScriptException         Transaction index out-of-range
+     */
+    public final void serializeForSignature(int index, int sigHashType, int forkId, byte[] subScriptBytes,
+                                            SerializedBuffer outBuffer) throws ScriptException {
         //
         // The transaction input must be within range
         //
@@ -811,14 +821,15 @@ public class Transaction implements ByteSerializable {
         // The reference client accepts an invalid hash types and treats it as SIGHASH_ALL.  So we need to
         // do the same.
         //
-        anyoneCanPay = ((sigHashType&ScriptOpCodes.SIGHASH_ANYONE_CAN_PAY) != 0);
-        hashType = sigHashType&(255-ScriptOpCodes.SIGHASH_ANYONE_CAN_PAY-ScriptOpCodes.SIGHASH_FORKID);
+        boolean anyoneCanPay = ((sigHashType&ScriptOpCodes.SIGHASH_ANYONE_CAN_PAY) != 0);
+        boolean chainFork = ((sigHashType&ScriptOpCodes.SIGHASH_FORKID) != 0);
+        int hashType = sigHashType&(255-ScriptOpCodes.SIGHASH_ANYONE_CAN_PAY-ScriptOpCodes.SIGHASH_FORKID);
         if (hashType != ScriptOpCodes.SIGHASH_ALL &&
                         hashType != ScriptOpCodes.SIGHASH_NONE &&
                         hashType != ScriptOpCodes.SIGHASH_SINGLE)
             hashType = ScriptOpCodes.SIGHASH_ALL;
 
-        if (segWit) {
+        if (segWit || chainFork) {
             SerializedBuffer workBuffer = new SerializedBuffer(256);
             //
             // Hash the connected outputs
@@ -827,9 +838,7 @@ public class Transaction implements ByteSerializable {
             if (anyoneCanPay) {
                 hashPrevouts = new byte[32];
             } else {
-                for (TransactionInput input : txInputs) {
-                    input.getOutPoint().getBytes(workBuffer);
-                }
+                txInputs.forEach(input -> input.getOutPoint().getBytes(workBuffer));
                 hashPrevouts = Utils.doubleDigest(workBuffer.toByteArray());
             }
             //
@@ -840,9 +849,7 @@ public class Transaction implements ByteSerializable {
                 hashSequence = new byte[32];
             } else {
                 workBuffer.rewind();
-                for (TransactionInput input : txInputs) {
-                    workBuffer.putInt(input.getSeqNumber());
-                }
+                txInputs.forEach(input -> workBuffer.putInt(input.getSeqNumber()));
                 hashSequence = Utils.doubleDigest(workBuffer.toByteArray());
             }
             //
@@ -859,9 +866,7 @@ public class Transaction implements ByteSerializable {
                 hashOutputs = new byte[32];
             } else {
                 workBuffer.rewind();
-                for (TransactionOutput output : txOutputs) {
-                    output.getBytes(workBuffer);
-                }
+                txOutputs.forEach(output -> output.getBytes(workBuffer));
                 hashOutputs = Utils.doubleDigest(workBuffer.toByteArray());
             }
             //
@@ -877,8 +882,8 @@ public class Transaction implements ByteSerializable {
                      .putInt(input.getSeqNumber())
                      .putBytes(hashOutputs)
                      .putUnsignedInt(txLockTime)
-                     .putInt(sigHashType);
-
+                     .putInt(chainFork ? (sigHashType | (forkId << 8)) : sigHashType);
+            
         } else {
 
             //
