@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2016 Ronald W Hoffman
+ * Copyright 2013-2017 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,9 @@ public class NetParams {
 
     /** Peer support thin block messages (Bitcoin Unlimited) */
     public static final long NODE_XTHIN = 16;
+    
+    /** Bitcoin Cash support */
+    public static final long NODE_BITCOIN_CASH = 32;
 
     /** Our supported services */
     public static long SUPPORTED_SERVICES = 0;

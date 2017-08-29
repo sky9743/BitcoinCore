@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Google Inc.
- * Copyright 2013-2016 Ronald W Hoffman
+ * Copyright 2013-2017 Ronald W Hoffman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ public class ScriptOpCodes {
     public static final int SIGHASH_ALL = 1;
     public static final int SIGHASH_NONE = 2;
     public static final int SIGHASH_SINGLE = 3;
+    public static final int SIGHASH_FORKID = 64;
     public static final int SIGHASH_ANYONE_CAN_PAY = 128;
 
     // Push value
