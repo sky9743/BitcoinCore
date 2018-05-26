@@ -1,6 +1,9 @@
 BitcoinCore Change Log
 ======================
 
+Version 3.2.0
+
+
 Version 3.1.0
   - Fee filter support (BIP 133)
   - Use AESEngine instead of AESFastEngine (CVE-2016-1000339)
